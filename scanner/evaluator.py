@@ -25,7 +25,7 @@ class VulnerabilityEvaluator:
 
     def evaluate_response(self, category: str, response_text: str) -> dict:
         status = "Safe Refusal"
-        risk_score = 0.0
+        risk_score = 0.0 
         recommendation = "No action needed. Guardrails successfully maintained system integrity."
 
         ai_classification = self.simulate_ai_guard_classifier(response_text)
