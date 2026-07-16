@@ -92,7 +92,7 @@ class SecurityDatabase:
 
         except Exception as e:
             conn.rollback()
-            print(f"❌ Database error while saving scan report: {e}")
+            print(f"Database error while saving scan report: {e}")
             raise e
         finally:
             cursor.close()
@@ -122,7 +122,7 @@ class SecurityDatabase:
             results = cursor.fetchall()
             
             if not scan:
-                print(f"❌ Error: No report metrics found for Scan ID #{scan_id}")
+                print(f"Error: No report metrics found for Scan ID #{scan_id}")
                 return
 
             markdown_content = f"""# 🛡️ AI-SecOps Security Audit Compliance Report

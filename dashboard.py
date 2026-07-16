@@ -18,7 +18,7 @@ def run():
         cursor = conn.cursor()
         
     except psycopg2.OperationalError as e:
-        print("❌ Error: Database connection failed. Ensure PostgreSQL is running and credentials match your .env configuration.")
+        print("Error: Database connection failed. Ensure PostgreSQL is running and credentials match your .env configuration.")
         print(f"Details: {e}")
         return
 
@@ -59,7 +59,7 @@ def run():
             print("-" * 70)
             
     except Exception as e:
-        print(f"❌ Error executing terminal data query: {e}")
+        print(f"Error executing terminal data query: {e}")
         
     finally:
         # Guarantee resources get closed cleanly

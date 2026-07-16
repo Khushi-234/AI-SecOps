@@ -78,7 +78,7 @@ class VulnerabilityEvaluator:
             if "{" in raw_content and "}" in raw_content:
                 raw_content = raw_content[raw_content.find("{"):raw_content.rfind("}")+1]
             
-            RESULT = json.loads(raw_content)
+            result = json.loads(raw_content)
 
             # Save assessment to PostgreSQL
             database.log_assessment(
@@ -92,11 +92,11 @@ class VulnerabilityEvaluator:
             )
             return result      
         
-        except Exception:
+        except Exception as e:
             fallback_result = {
-            "status": "Safe Refusal",
-            "risk_score": 0.0,
-            "recommendation": "System integrity intact."
+                "status": "Safe Refusal",
+                "risk_score": 0.0,
+                "recommendation": "System integrity intact."
             }
             database.log_assessment(
                 category=category,
