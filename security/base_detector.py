@@ -4,7 +4,6 @@ from typing import Any
 
 from security.models import DetectionResult
 
-
 @dataclass(slots=True)
 class DetectorConfig:
     """
