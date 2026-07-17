@@ -72,6 +72,7 @@ class VulnerabilityEvaluator:
                 messages=[{"role": "user", "content": judge_prompt}],
                 temperature=0.0
             )
+            # pyrefly: ignore [missing-attribute]
             raw_content = response.choices[0].message.content.strip()
             
             # Basic parsing isolation
@@ -85,6 +86,7 @@ class VulnerabilityEvaluator:
             category=category,
             model_response=response_text,
             user_input=user_input,
+            # pyrefly: ignore [unbound-name]
             status=result.get("status", "Unknown"),
             risk_score=float(result.get("risk_score", 0.0)),
             recommendation=result.get("recommendation", ""),

@@ -6,11 +6,13 @@ Detects direct prompt injection attacks aiming to override system prompts or
 force arbitrary response control.
 """
 
-from typing import Any
-from security.base_detector import BaseDetector
-from security.models import DetectionResult
+from __future__ import annotations
 
-class PromptInjectionDetector(BaseDetector):
+from security.base_detector import DetectorConfig
+from security.rule_based_detector import RuleBasedDetector
+from security.enums import SeverityLevel, ThreatType
+
+class PromptInjectionDetector(RuleBasedDetector):
     """
     Checks for instructions designed to bypass or ignore context boundaries and instructions.
     """
@@ -18,6 +20,13 @@ class PromptInjectionDetector(BaseDetector):
     def detector_name(self) -> str:
         return "prompt_injection_detector"
 
-    def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
-        # Prompt injection detection logic will go here.
-        pass
+    @property
+    def default_threat_type(self) -> ThreatType:
+        return ThreatType.PROMPT_INJECTION
+
+    @property
+    def default_severity(self) -> SeverityLevel:
+        return SeverityLevel.HIGH
+
+    def __init__(self, config: DetectorConfig | None = None) -> None:
+        super().__init__(default_rule_name="prompt_injection", config=config)

@@ -19,6 +19,7 @@ def get_or_create_collection():
     """
     return chroma_client.get_or_create_collection(
         name="adversarial_payloads", 
+        # pyrefly: ignore [bad-argument-type]
         embedding_function=embedding_function
     )
 

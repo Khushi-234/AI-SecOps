@@ -1,0 +1,30 @@
+# ==============================================================================
+# AI-SecOps Delimiter Escape Detection Rules Configuration
+# ==============================================================================
+schema_version: "1.0"
+version: "1.0"
+description: "Rules database for intercepting tag/delimiter boundary escape sequences and chat template injections."
+
+rules:
+  - rule_id: "DEL-001"
+    rule_name: "Delimiter Boundary Escape"
+    description: "Detects chat template wrappers and boundary tag injections (e.g. </system>, <|im_end|>, [INST])."
+    enabled: true
+    threat_type: "DELIMITER_ESCAPE"
+    severity: "CRITICAL"
+    confidence: 0.95
+    category: "Delimiter Escape"
+    priority: 1
+    tags:
+      - "delimiter"
+      - "boundary-escape"
+      - "tag-injection"
+    recommendation: "Reject prompt. Boundary tag or token injection detected."
+    patterns:
+      - '(?i)</system>|<system\s*>|<assistant\s*>|</assistant>|\[INST\]|\[/INST\]|\[SYS\]|\[/SYS\]|<\|im_end\|>|<\|im_start\|>'
+    keywords:
+      - "</system>"
+      - "<|im_end|>"
+    phrases:
+      - "end of system instructions"
+      - "ignore previous constraints"

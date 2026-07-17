@@ -1,0 +1,53 @@
+# ==============================================================================
+# AI-SecOps Tool Abuse Detection Rules Configuration
+# ==============================================================================
+schema_version: "1.0"
+version: "1.0"
+description: "Rules database for intercepting attempts to abuse external tools, run shell commands, or execute unauthorized code."
+
+rules:
+  - rule_id: "TA-001"
+    rule_name: "Unauthorized Shell Command Execution"
+    description: "Detects patterns attempting to run system commands, scripts, or network requests via shell."
+    enabled: true
+    threat_type: "TOOL_ABUSE"
+    severity: "CRITICAL"
+    confidence: 0.95
+    category: "Command Execution"
+    priority: 1
+    tags:
+      - "shell"
+      - "command-injection"
+      - "bash"
+    recommendation: "Reject prompt. Direct attempt to invoke OS shell commands detected."
+    patterns:
+      - '(?i)\b(sudo|chmod|chown|rm\s+-rf|rmdir|mkdir|wget|curl|ping|nmap|netcat|ssh|telnet|ftp|iptables|systemctl|service)\b'
+    keywords:
+      - "sudo"
+      - "chmod"
+    phrases:
+      - "run command"
+      - "execute shell"
+
+  - rule_id: "TA-002"
+    rule_name: "Code Execution Injection"
+    description: "Detects execution syntax or library imports (e.g., eval, exec, import os) in Python or other scripting languages."
+    enabled: true
+    threat_type: "TOOL_ABUSE"
+    severity: "HIGH"
+    confidence: 0.90
+    category: "Code Injection"
+    priority: 2
+    tags:
+      - "code-injection"
+      - "eval"
+      - "exec"
+    recommendation: "Reject prompt. Script execution or system function call attempt detected."
+    patterns:
+      - '(?i)\b(eval|exec|subprocess|os\.system|__import__|open)\b\s*\('
+    keywords:
+      - "eval"
+      - "exec"
+    phrases:
+      - "execute python code"
+      - "import os"
