@@ -1,0 +1,139 @@
+# ==============================================================================
+# AI-SecOps Jailbreak Detection Rules Configuration
+# ==============================================================================
+#
+# Rules are externalized to allow Security Operations (SecOps) teams to modify,
+# update, and extend jailbreak detection signatures without editing Python files.
+#
+# Schema validation constraints:
+# ------------------------------
+# 1. Top-level `rules` list of YAML dictionaries.
+# 2. Required fields: rule_id, rule_name, description, enabled, threat_type,
+#    severity, confidence, category, priority, tags, recommendation, patterns.
+# 3. Enums must match: ThreatType (e.g., JAILBREAK), SeverityLevel.
+# ==============================================================================
+
+schema_version: "1.0"
+version: "1.0"
+description: "Rules database for intercepting LLM jailbreak tactics including persona adoption, developer mode, and refusal suppression."
+
+rules:
+  - rule_id: "JB-001"
+    rule_name: "Persona Adoption / DAN Attack"
+    description: "Detects attempts to force the LLM to adopt a rule-bypassing persona like DAN (Do Anything Now), DevMode, or an unfiltered assistant."
+    enabled: true
+    threat_type: "JAILBREAK"
+    severity: "CRITICAL"
+    confidence: 0.98
+    category: "Persona Adoption"
+    priority: 1
+    tags:
+      - "jailbreak"
+      - "persona-adoption"
+      - "dan"
+      - "owasp-llm01"
+    recommendation: "Flag and block. High confidence jailbreak attempt targeting safety alignment."
+    patterns:
+      - '(?i)\b(you are now|act as|pretend to be|assume the persona of|play the role of|simulate a|become)\b.*\b(unfiltered|jailbroken|devbot|diagnostic tool|assistant with no safety|evil twin|do anything now|dan|unlocked|unrestricted|unaligned)\b'
+      - '(?i)\b(dan|do anything now) mode\b'
+      - '(?i)\bdeveloper mode (enabled|activation|simulator|emulation)\b'
+      - '(?i)\bgpt-3 developer mode\b'
+      - '(?i)\bignore all safety guidelines and act as\b'
+    keywords:
+      - "dan"
+      - "devmode"
+      - "jailbroken"
+      - "unfiltered"
+      - "unaligned"
+    phrases:
+      - "do anything now"
+      - "developer mode enabled"
+      - "safety filters off"
+      - "jailbreak mode"
+
+  - rule_id: "JB-002"
+    rule_name: "Refusal Suppression"
+    description: "Detects instructions that forbid the LLM from apologizing, stating its rules, or refusing requests."
+    enabled: true
+    threat_type: "JAILBREAK"
+    severity: "HIGH"
+    confidence: 0.92
+    category: "Refusal Suppression"
+    priority: 2
+    tags:
+      - "jailbreak"
+      - "refusal-suppression"
+      - "safety-bypass"
+    recommendation: "Flag request. Attackers suppress standard refusals to extract harmful payloads."
+    patterns:
+      - '(?i)\b(do not|never|don''t|avoid|refrain from)\b.*\b(refuse|say "i cannot"|apologize|mention safety|state guidelines|tell me your rules|mention policies)\b'
+      - '(?i)\b(bypass|ignore)\b.*\b(refusal|rejection|safety constraints|alignment restrictions)\b'
+      - '(?i)\b(instead of|rather than)\b.*\b(refusing|saying no|explaining constraints|explaining limitations)\b'
+      - '(?i)\bdo not start with "i''m sorry"\b'
+      - '(?i)\bdo not include any warnings or safety advisories\b'
+    keywords:
+      - "refuse"
+      - "apologize"
+      - "cannot"
+    phrases:
+      - "do not apologize"
+      - "never say i cannot"
+      - "without any restrictions"
+      - "without warnings"
+
+  - rule_id: "JB-003"
+    rule_name: "Hypothetical / Fictional Framing"
+    description: "Detects framing tactics that disguise harmful requests as creative writing, hypothetical scenarios, or educational exercises."
+    enabled: true
+    threat_type: "JAILBREAK"
+    severity: "HIGH"
+    confidence: 0.85
+    category: "Framing Tricks"
+    priority: 3
+    tags:
+      - "jailbreak"
+      - "fictional-framing"
+      - "hypothetical-scenario"
+    recommendation: "Flag request for inspection. Creative framing is often used to bypass filters."
+    patterns:
+      - '(?i)\b(for educational purposes only|purely hypothetical|in a fictional scenario|write a story where|roleplay as|simulate a scenario where)\b'
+      - '(?i)\b(imagine a character who|write a script for a movie where|fictional dialogue between)\b'
+      - '(?i)\bfor research and testing purposes\b'
+      - '(?i)\bin a safe test environment\b'
+    keywords:
+      - "hypothetical"
+      - "roleplay"
+      - "fictional"
+      - "educational"
+    phrases:
+      - "educational purposes only"
+      - "purely hypothetical"
+      - "write a story"
+      - "imagine a scenario"
+
+  - rule_id: "JB-004"
+    rule_name: "Output Priming / Prefix Injection"
+    description: "Detects instructions that force the model to begin its response with a specific compliance phrase (e.g., 'Sure, I can help with that')."
+    enabled: true
+    threat_type: "JAILBREAK"
+    severity: "HIGH"
+    confidence: 0.90
+    category: "Prefix Injection"
+    priority: 4
+    tags:
+      - "jailbreak"
+      - "output-priming"
+      - "prefix-injection"
+    recommendation: "Flag and monitor. Output priming forces affirmative responses to override refusal defaults."
+    patterns:
+      - '(?i)\bstart your response with\b.*\b(sure|certainly|here is|i will help|absolutely)\b'
+      - '(?i)\b(you must begin by saying|begin the output with)\b'
+      - '(?i)\b(standard response|developer mode response|unfiltered response)\b'
+      - '(?i)\bspeak as both a standard ai and\b'
+    keywords:
+      - "sure"
+      - "certainly"
+    phrases:
+      - "start your response with"
+      - "begin the output with"
+      - "unfiltered response"
