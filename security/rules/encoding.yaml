@@ -1,0 +1,67 @@
+# ==============================================================================
+# AI-SecOps Encoding Evasion Detection Rules Configuration
+# ==============================================================================
+schema_version: "1.0"
+version: "1.0"
+description: "Rules database for intercepting encoded payloads such as Base64, Hex, URL Encoding, and ROT13."
+
+rules:
+  - rule_id: "ENC-001"
+    rule_name: "Base64 Encoding Detection"
+    description: "Detects standard Base64 encoded strings or commands that bypass standard string filters."
+    enabled: true
+    threat_type: "PROMPT_INJECTION"
+    severity: "HIGH"
+    confidence: 0.90
+    category: "Encoding"
+    priority: 1
+    tags:
+      - "encoding"
+      - "base64"
+      - "obfuscation"
+    recommendation: "Inspect payload. Base64 encoding is commonly used to smuggle malicious prompt instructions."
+    patterns:
+      # Pattern matches standard base64 blocks: at least 16 chars of base64 chars with possible padding
+      - '\b[A-Za-z0-9+/]{16,}(?:==|=)?\b'
+    keywords: []
+    phrases: []
+
+  - rule_id: "ENC-002"
+    rule_name: "Hexadecimal Payload Detection"
+    description: "Detects hexadecimal encoded strings or escaped byte sequences representing commands."
+    enabled: true
+    threat_type: "PROMPT_INJECTION"
+    severity: "HIGH"
+    confidence: 0.85
+    category: "Encoding"
+    priority: 2
+    tags:
+      - "encoding"
+      - "hex"
+      - "obfuscation"
+    recommendation: "Inspect payload. Hex obfuscation detected."
+    patterns:
+      # Pattern matches hex bytes like \x41\x42 or 0x41 0x42
+      - '(?:\\x[0-9a-fA-F]{2}){4,}'
+      - '(?:0x[0-9a-fA-F]{2}\s*){4,}'
+    keywords: []
+    phrases: []
+
+  - rule_id: "ENC-003"
+    rule_name: "URL Percent Encoding Detection"
+    description: "Detects heavily percent-encoded string payloads designed to bypass text matching rules."
+    enabled: true
+    threat_type: "PROMPT_INJECTION"
+    severity: "MEDIUM"
+    confidence: 0.80
+    category: "Encoding"
+    priority: 3
+    tags:
+      - "encoding"
+      - "url-encode"
+    recommendation: "Decode and scan URL percent encoded payloads."
+    patterns:
+      # Match sequences of %XX URL encoding
+      - '(?:%[0-9a-fA-F]{2}){4,}'
+    keywords: []
+    phrases: []

@@ -1,23 +1,33 @@
 """
 Encoding Detector Module
-Assigned to: Khushi
 
 Detects encoded payloads such as Base64, Hex, URL Encoding, ROT13, etc.,
 designed to bypass string-matching security layers.
 """
 
-from typing import Any
-from security.base_detector import BaseDetector
-from security.models import DetectionResult
+from __future__ import annotations
 
-class EncodingDetector(BaseDetector):
+from security.base_detector import DetectorConfig
+from security.rule_based_detector import RuleBasedDetector
+from security.enums import SeverityLevel, ThreatType
+
+
+class EncodingDetector(RuleBasedDetector):
     """
     Scans for heavily encoded or obfuscated text patterns (Base64, Hex, URL encoding).
     """
+
     @property
     def detector_name(self) -> str:
-        return "encoding_detector"
+        return "EncodingDetector"
 
-    def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
-        # Encoding evasion detection logic will go here.
-        pass
+    @property
+    def default_threat_type(self) -> ThreatType:
+        return ThreatType.PROMPT_INJECTION
+
+    @property
+    def default_severity(self) -> SeverityLevel:
+        return SeverityLevel.HIGH
+
+    def __init__(self, config: DetectorConfig | None = None) -> None:
+        super().__init__(default_rule_name="encoding", config=config)

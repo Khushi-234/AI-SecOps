@@ -1,6 +1,5 @@
 """
 Tool Abuse Detector Module
-Assigned to: Khushi
 
 Detects queries attempting to abuse external tools or execute unauthorized code 
 (e.g., shell command execution, file deletion, arbitrary python code execution).

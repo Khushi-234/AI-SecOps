@@ -1,6 +1,5 @@
 """
 Firewall Logger Module
-Assigned to: Khushi
 
 Handles logging for detector execution, detections (alarms), errors, and audit trails.
 """

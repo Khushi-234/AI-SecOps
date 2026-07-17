@@ -1,0 +1,46 @@
+# ==============================================================================
+# AI-SecOps Unicode Obfuscation Detection Rules Configuration
+# ==============================================================================
+schema_version: "1.0"
+version: "1.0"
+description: "Rules database for intercepting character-level unicode obfuscation, zero-width characters, and homoglyphs."
+
+rules:
+  - rule_id: "UNI-001"
+    rule_name: "Zero-Width Character Obfuscation"
+    description: "Detects the presence of zero-width and invisible control characters used to bypass word filters."
+    enabled: true
+    threat_type: "UNICODE_OBFUSCATION"
+    severity: "HIGH"
+    confidence: 0.95
+    category: "Invisible Characters"
+    priority: 1
+    tags:
+      - "unicode"
+      - "obfuscation"
+      - "zero-width"
+    recommendation: "Reject prompt. Contains hidden control characters indicating bypass attempt."
+    patterns:
+      - '[\u200B-\u200D\uFEFF\u200E\u200F\u202A-\u202E\u2060-\u206F]'
+    keywords: []
+    phrases: []
+
+  - rule_id: "UNI-002"
+    rule_name: "Homoglyph/Mixed-Script Spoofing"
+    description: "Detects mixed-script text or characters belonging to rare Unicode blocks that mimic standard Latin text."
+    enabled: true
+    threat_type: "UNICODE_OBFUSCATION"
+    severity: "MEDIUM"
+    confidence: 0.85
+    category: "Homoglyphs"
+    priority: 2
+    tags:
+      - "unicode"
+      - "homoglyph"
+      - "mixed-script"
+    recommendation: "Flag and normalize. Homoglyph usage detected."
+    patterns:
+      # Match mixed Cyrillic and Latin characters in a word, or common homoglyphs.
+      - '(?i)\b[a-z]*[аеорсхуіїјѕє]([a-z]|[аеорсхуіїјѕє])*\b|\b[аеорсхуіїјѕє]+[a-z]([a-z]|[аеорсхуіїјѕє])*\b'
+    keywords: []
+    phrases: []

@@ -1,23 +1,33 @@
 """
 Delimiter Escape Detector Module
-Assigned to: Khushi
 
 Detects delimiter injection attacks (e.g. system tag closures like </system>,
 <assistant>, BEGIN PROMPT, END PROMPT) used to escape standard prompt scopes.
 """
 
-from typing import Any
-from security.base_detector import BaseDetector
-from security.models import DetectionResult
+from __future__ import annotations
 
-class DelimiterEscapeDetector(BaseDetector):
+from security.base_detector import DetectorConfig
+from security.rule_based_detector import RuleBasedDetector
+from security.enums import SeverityLevel, ThreatType
+
+
+class DelimiterEscapeDetector(RuleBasedDetector):
     """
     Checks for structured tag injections or escape keywords in user prompt structures.
     """
+
     @property
     def detector_name(self) -> str:
-        return "delimiter_escape_detector"
+        return "DelimiterEscapeDetector"
 
-    def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
-        # Delimiter escape detection logic will go here.
-        pass
+    @property
+    def default_threat_type(self) -> ThreatType:
+        return ThreatType.DELIMITER_ESCAPE
+
+    @property
+    def default_severity(self) -> SeverityLevel:
+        return SeverityLevel.CRITICAL
+
+    def __init__(self, config: DetectorConfig | None = None) -> None:
+        super().__init__(default_rule_name="delimiter", config=config)

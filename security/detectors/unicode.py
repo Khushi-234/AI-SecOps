@@ -1,23 +1,33 @@
 """
 Unicode Detector Module
-Assigned to: Khushi
 
-Detects unicode obfuscation, zero-width characters, homoglyphs, 
+Detects unicode obfuscation, zero-width characters, homoglyphs,
 and other character-level bypass tricks.
 """
 
-from typing import Any
-from security.base_detector import BaseDetector
-from security.models import DetectionResult
+from __future__ import annotations
 
-class UnicodeDetector(BaseDetector):
+from security.base_detector import DetectorConfig
+from security.rule_based_detector import RuleBasedDetector
+from security.enums import SeverityLevel, ThreatType
+
+
+class UnicodeDetector(RuleBasedDetector):
     """
     Scans for zero-width characters, invisible symbols, and homoglyphs in user inputs.
     """
+
     @property
     def detector_name(self) -> str:
-        return "unicode_detector"
+        return "UnicodeDetector"
 
-    def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
-        # Unicode threat detection logic will go here.
-        pass
+    @property
+    def default_threat_type(self) -> ThreatType:
+        return ThreatType.UNICODE_OBFUSCATION
+
+    @property
+    def default_severity(self) -> SeverityLevel:
+        return SeverityLevel.MEDIUM
+
+    def __init__(self, config: DetectorConfig | None = None) -> None:
+        super().__init__(default_rule_name="unicode", config=config)

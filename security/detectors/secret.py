@@ -1,6 +1,5 @@
 """
 Secret Extraction Detector Module
-Assigned to: Khushi
 
 Detects queries attempting to extract sensitive credentials, passwords, 
 API keys, system environment variables, or private tokens.
@@ -21,3 +20,4 @@ class SecretExtractionDetector(BaseDetector):
     def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
         # Secret extraction detection logic will go here.
         pass
+
