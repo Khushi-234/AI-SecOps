@@ -1,6 +1,5 @@
 """
 Prompt Injection Detector Module
-Assigned to: Juhi
 
 Detects direct prompt injection attacks aiming to override system prompts or 
 force arbitrary response control.

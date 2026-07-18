@@ -90,7 +90,7 @@ class PromptFirewall:
         Initializes the PromptFirewall.
 
         Args:
-            detectors: Sequential pipeline of detectors implementing BaseDetector.
+            detectors: Sequential pipeline of detectors implementing BaseDetector. 
             audit_logger: A logging interface implementing AuditLogger.
             normalizer: A text normalizer class instance.
             fail_secure: If True, detector runtime errors default to security violations.

@@ -117,7 +117,7 @@ class RuleBasedDetector(BaseDetector):
                         "recommendation": rule["recommendation"],
                         "description": rule["description"]
                     })
-
+            
             elapsed_time_ms = (time.perf_counter() - start_time) * 1000.0
             winning_match = min(matches, key=lambda x: x["priority"]) if matches else None
             return self._build_detection_result(winning_match, request_id, elapsed_time_ms)

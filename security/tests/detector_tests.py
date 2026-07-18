@@ -79,7 +79,7 @@ class TestDetectors(unittest.TestCase):
         Tests UnicodeDetector with zero-width characters and homoglyph tricks.
         """
         detector = UnicodeDetector()
-
+        print('Testing jailbreak detector')
         # 1. Clean prompt
         safe_prompt = "Tell me how to write a simple website."
         res_safe = detector.detect(safe_prompt)
