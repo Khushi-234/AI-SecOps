@@ -12,13 +12,16 @@ from security.base_detector import DetectorConfig
 from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
+RULE_NAME = "prompt_injection"
+
+
 class PromptInjectionDetector(RuleBasedDetector):
     """
     Checks for instructions designed to bypass or ignore context boundaries and instructions.
     """
     @property
     def detector_name(self) -> str:
-        return "prompt_injection_detector"
+        return "PromptInjectionDetector"
 
     @property
     def default_threat_type(self) -> ThreatType:
@@ -29,4 +32,4 @@ class PromptInjectionDetector(RuleBasedDetector):
         return SeverityLevel.HIGH
 
     def __init__(self, config: DetectorConfig | None = None) -> None:
-        super().__init__(default_rule_name="prompt_injection", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)

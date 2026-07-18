@@ -12,6 +12,9 @@ from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
 
+RULE_NAME = "tool_abuse"
+
+
 class ToolAbuseDetector(RuleBasedDetector):
     """
     Checks for commands, execution syntax, or scripting patterns indicating tool exploit attempts.
@@ -30,4 +33,4 @@ class ToolAbuseDetector(RuleBasedDetector):
         return SeverityLevel.CRITICAL
 
     def __init__(self, config: DetectorConfig | None = None) -> None:
-        super().__init__(default_rule_name="tool_abuse", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)
