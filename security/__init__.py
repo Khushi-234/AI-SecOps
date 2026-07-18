@@ -18,7 +18,7 @@ from security.models import (
 )
 from security.normalizer import NormalizationConfig, TextNormalizer
 from security.prompt_firewall import PromptFirewall
-from security.prompt_injection_detector import PromptInjectionDetector
+from security.detectors.prompt_injection import PromptInjectionDetector
 
 __all__ = [
     "AuditLogger",
