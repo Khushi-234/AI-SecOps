@@ -63,12 +63,13 @@ class RuleBasedDetector(BaseDetector):
                 evidence="Detector disabled in configuration.",
                 execution_time_ms=0.0,
                 status=DetectionStatus.SKIPPED,
-                timestamp=self._current_timestamp(),
+                timestamp=RuleBasedDetector._current_timestamp(),
                 metadata={}
             )
 
         try:
             matches: list[dict[str, Any]] = []
+            words = re.findall(r"\b\w+\b", prompt.lower())
 
             for rule in self._compiled_rules:
                 if not rule.get("enabled", True):
@@ -86,7 +87,7 @@ class RuleBasedDetector(BaseDetector):
                     match_count += rx_count
 
                 # Keyword matching
-                kw_text, kw_pat, kw_count = self._keyword_match(prompt, rule)
+                kw_text, kw_pat, kw_count = self._keyword_match(prompt, rule, words)
                 if kw_count > 0:
                     match_count += kw_count
                     if not matched_text:
@@ -117,8 +118,8 @@ class RuleBasedDetector(BaseDetector):
                         "recommendation": rule["recommendation"],
                         "description": rule["description"]
                     })
-            
-            elapsed_time_ms = (time.perf_counter() - start_time) * 1000.0
+
+            elapsed_time_ms = self._calculate_elapsed_ms(start_time)
             winning_match = min(matches, key=lambda x: x["priority"]) if matches else None
             return self._build_detection_result(winning_match, request_id, elapsed_time_ms)
 
@@ -142,7 +143,7 @@ class RuleBasedDetector(BaseDetector):
                     matched_pattern = pattern.pattern
         return matched_text, matched_pattern, match_count
 
-    def _keyword_match(self, prompt: str, rule: dict[str, Any]) -> tuple[str, str, int]:
+    def _keyword_match(self, prompt: str, rule: dict[str, Any], words: list[str]) -> tuple[str, str, int]:
         """
         Executes keyword token matching for a given rule.
         """
@@ -150,7 +151,6 @@ class RuleBasedDetector(BaseDetector):
         matched_pattern = ""
         match_count = 0
         for kw in rule.get("keywords", []):
-            words = re.findall(r"\b\w+\b", prompt.lower())
             if kw.lower() in words:
                 match_count += 1
                 if not matched_text:
@@ -173,11 +173,18 @@ class RuleBasedDetector(BaseDetector):
                     matched_pattern = f"phrase: {phrase}"
         return matched_text, matched_pattern, match_count
 
-    def _current_timestamp(self) -> datetime:
+    @staticmethod
+    def _current_timestamp() -> datetime:
         """
         Returns the current timezone-aware timestamp.
         """
         return datetime.now(timezone.utc)
+
+    def _calculate_elapsed_ms(self, start_time: float) -> float:
+        """
+        Calculates elapsed time in milliseconds.
+        """
+        return (time.perf_counter() - start_time) * 1000.0
 
     def _load_and_compile_rules(self, rule_path: Path) -> list[dict[str, Any]]:
         """
@@ -300,7 +307,7 @@ class RuleBasedDetector(BaseDetector):
                 evidence="",
                 execution_time_ms=elapsed_time_ms,
                 status=DetectionStatus.SUCCESS,
-                timestamp=self._current_timestamp(),
+                timestamp=RuleBasedDetector._current_timestamp(),
                 metadata={}
             )
 
@@ -340,6 +347,6 @@ class RuleBasedDetector(BaseDetector):
             evidence=evidence,
             execution_time_ms=elapsed_time_ms,
             status=DetectionStatus.SUCCESS,
-            timestamp=self._current_timestamp(),
+            timestamp=RuleBasedDetector._current_timestamp(),
             metadata=meta
         )

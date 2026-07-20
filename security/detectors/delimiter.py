@@ -11,6 +11,7 @@ from security.base_detector import DetectorConfig
 from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
+RULE_NAME = "delimiter"
 
 class DelimiterEscapeDetector(RuleBasedDetector):
     """
@@ -30,4 +31,4 @@ class DelimiterEscapeDetector(RuleBasedDetector):
         return SeverityLevel.CRITICAL
 
     def __init__(self, config: DetectorConfig | None = None) -> None:
-        super().__init__(default_rule_name="delimiter", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)

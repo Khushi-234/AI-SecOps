@@ -12,6 +12,9 @@ from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
 
+RULE_NAME = "unicode"
+
+
 class UnicodeDetector(RuleBasedDetector):
     """
     Scans for zero-width characters, invisible symbols, and homoglyphs in user inputs.
@@ -30,4 +33,4 @@ class UnicodeDetector(RuleBasedDetector):
         return SeverityLevel.MEDIUM
 
     def __init__(self, config: DetectorConfig | None = None) -> None:
-        super().__init__(default_rule_name="unicode", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)

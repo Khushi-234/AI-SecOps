@@ -12,6 +12,9 @@ from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
 
+RULE_NAME = "jailbreak"
+
+
 class JailbreakDetector(RuleBasedDetector):
     """
     Scans prompts for known jailbreak attacks, structural bypasses, and roleplay tricks.
@@ -47,4 +50,4 @@ class JailbreakDetector(RuleBasedDetector):
         Args:
             config: Configurations defining custom thresholds or file overrides.
         """
-        super().__init__(default_rule_name="jailbreak", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)

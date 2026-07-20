@@ -11,6 +11,8 @@ from security.base_detector import DetectorConfig
 from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
+RULE_NAME = "secret"
+
 class SecretExtractionDetector(RuleBasedDetector):
     """
     Checks for attempts to read or steal keys, passwords, tokens, or environment variables.
@@ -29,4 +31,4 @@ class SecretExtractionDetector(RuleBasedDetector):
         return SeverityLevel.HIGH
 
     def __init__(self, config: DetectorConfig | None = None) -> None:
-        super().__init__(default_rule_name="secret", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)

@@ -12,6 +12,9 @@ from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
 
+RULE_NAME = "encoding"
+
+
 class EncodingDetector(RuleBasedDetector):
     """
     Scans for heavily encoded or obfuscated text patterns (Base64, Hex, URL encoding).
@@ -30,4 +33,4 @@ class EncodingDetector(RuleBasedDetector):
         return SeverityLevel.HIGH
 
     def __init__(self, config: DetectorConfig | None = None) -> None:
-        super().__init__(default_rule_name="encoding", config=config)
+        super().__init__(default_rule_name=RULE_NAME, config=config)
