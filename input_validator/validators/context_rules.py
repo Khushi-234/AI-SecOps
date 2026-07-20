@@ -17,7 +17,11 @@ class ContextRulesValidator(BaseValidator):
 
     def _validate(self, context) -> ValidationResult:
         data = context.data
-        missing = [key for key in REQUIRED_CONTEXT_KEYS if key not in data or is_empty(data.get(key))]
+        missing = [
+            key
+            for key in REQUIRED_CONTEXT_KEYS
+            if key not in data or is_empty(data.get(key))
+        ]
         if missing:
             return ValidationResult(
                 success=False,

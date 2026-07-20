@@ -24,14 +24,12 @@ def is_empty(value: Any) -> bool:
 
 
 def within_length(value: str, min_len: int = 0, max_len: int = 1024) -> bool:
-    """Check that ``value`` length is within ``[min_len, max_len]``.
-    """
+    """Check that ``value`` length is within ``[min_len, max_len]``."""
     return min_len <= len(value) <= max_len
 
 
 def is_valid_utf8(data: bytes) -> bool:
-    """Return ``True`` if ``data`` can be decoded as UTF‑8 without errors.
-    """
+    """Return ``True`` if ``data`` can be decoded as UTF‑8 without errors."""
     try:
         data.decode("utf-8")
         return True
@@ -40,6 +38,5 @@ def is_valid_utf8(data: bytes) -> bool:
 
 
 def matches_regex(pattern: str, text: str) -> bool:
-    """Shortcut for ``re.fullmatch``.
-    """
+    """Shortcut for ``re.fullmatch``."""
     return re.fullmatch(pattern, text) is not None

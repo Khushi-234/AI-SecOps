@@ -19,7 +19,11 @@ class CompletenessValidator(BaseValidator):
 
     def _validate(self, context) -> ValidationResult:
         data = context.data
-        missing = [field for field in REQUIRED_FIELDS if field not in data or is_empty(data.get(field))]
+        missing = [
+            field
+            for field in REQUIRED_FIELDS
+            if field not in data or is_empty(data.get(field))
+        ]
         if missing:
             return ValidationResult(
                 success=False,
