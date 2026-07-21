@@ -4,11 +4,11 @@
 Defines the structures used to convey validation outcomes.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Any, Dict
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValidationResult:
     """Result of a single validator.
 
@@ -21,14 +21,33 @@ class ValidationResult:
     success: bool
     validator_name: str
     message: str = ""
-    details: Dict[str, Any] = None
+    details: Dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
-        if self.details is None:
-            self.details = {}
+    
+@dataclass(frozen=True)
+class ConversationMessage:
+    """Represents a single message inside a conversation history.
+
+    Attributes:
+        role: The role of the speaker (e.g., 'system', 'user', 'assistant').
+        content: The text payload of the message.
+    """
+    role: str
+    content: str
 
 
-@dataclass
+@dataclass(frozen=True)
+class ConversationPayload:
+    """Represents the complete input request including current prompt and history.
+
+    Attributes:
+        user: Current user prompt or query.
+        history: List of preceding conversation messages.
+    """
+    user: str
+    history: List[ConversationMessage] = field(default_factory=list)
+
+@dataclass(frozen=True)
 class InputValidationResponse:
     """Aggregated response from the whole validation pipeline.
 
