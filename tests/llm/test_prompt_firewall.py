@@ -6,6 +6,8 @@ normalization, registered detectors execution ordering, fail-secure error wrappi
 non-blocking audit logging failures, and Response/Detection DTO compilations.
 """
 
+from tests.llm.conftest import fake_normalizer
+from tests.llm.conftest import fake_logger
 from datetime import datetime, timezone
 from typing import Any
 import pytest
@@ -91,7 +93,7 @@ def test_firewall_initialization_fail_secure(fake_logger: FakeAuditLogger, fake_
     ],
 )
 def test_input_validation_raises(
-    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer, invalid_prompt: any, expected_err: type
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer, invalid_prompt: Any, expected_err: type
 ) -> None:
     """Verifies that non-string and None prompts raise ValidationError immediately."""
     # Arrange
@@ -220,7 +222,7 @@ def test_detector_failure_unexpected_error_fail_secure_false_raises_wrapped(
     # Arrange
     det_crash = FakeDetector("CrashDetector", should_raise=ValueError("Unexpected crash"))
     firewall = PromptFirewall([det_crash], fake_logger, fake_normalizer, fail_secure=False)
-
+  
     # Act & Assert
     with pytest.raises(DetectorExecutionError) as exc_info:
         firewall.inspect_prompt("trigger")
@@ -368,7 +370,7 @@ def test_future_detector_additions_compatibility(fake_logger: FakeAuditLogger, f
     """Verifies that firewall behaves consistently regardless of the number of registered detectors."""
     # Arrange
     # Simulates registration of many dynamic detectors
-    detectors = [FakeDetector(f"DynamicDetector-{i}") for i in range(10)]
+    detectors : list[BaseDetector] = [FakeDetector(f"DynamicDetector-{i}") for i in range(10)]
     firewall = PromptFirewall(detectors, fake_logger, fake_normalizer)
 
     # Act

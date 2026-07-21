@@ -252,7 +252,7 @@ def test_boundary_confidence_values_pass(tmp_path: Path, confidence: float) -> N
 # ===========================================================================
 
 @pytest.mark.parametrize("priority", [-5, "one", 1.5])
-def test_invalid_priorities_raise_configuration_error(tmp_path: Path, priority: any) -> None:
+def test_invalid_priorities_raise_configuration_error(tmp_path: Path, priority: Any) -> None:
     """Verifies that negative, float, or string priorities raise a ConfigurationError."""
     # Arrange
     yaml_file = tmp_path / "priority_err.yaml"
@@ -526,7 +526,7 @@ def test_unexpected_runtime_exception_raises_detector_execution_error(tmp_path: 
     detector = FakeDetector(config=config)
 
     # Mock _regex_match to raise a generic runtime exception
-    def mock_regex_match(*args: any, **kwargs: any) -> None:
+    def mock_regex_match(*args: Any, **kwargs: Any) -> None:
         raise ValueError("Unexpected database or parsing connection drop")
 
     monkeypatch.setattr(detector, "_regex_match", mock_regex_match)

@@ -5,6 +5,7 @@ Verifies input validation, Unicode normalization, invisible/control characters r
 whitespace collapsing, result/metadata structures, serialization, and error scenarios.
 """
 
+from typing import Any
 from unittest.mock import patch
 import pytest
 
@@ -59,7 +60,7 @@ def test_normalization_config_invalid_form_raises() -> None:
         {"prompt": "text"},
     ],
 )
-def test_input_validation_invalid_types_raise(default_normalizer: TextNormalizer, invalid_input: any) -> None:
+def test_input_validation_invalid_types_raise(default_normalizer: TextNormalizer, invalid_input: Any) -> None:
     """Verifies that invalid input types raise a ValidationError."""
     # Arrange, Act & Assert
     with pytest.raises(ValidationError) as exc_info:
