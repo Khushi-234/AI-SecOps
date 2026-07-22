@@ -53,6 +53,13 @@ class BaseValidator(ABC):
         """The identifying name of the validator class."""
         pass
 
+    @abstractmethod
+    def _validate(
+        self, prompt: str, context: dict[str, Any]
+    ) -> tuple[bool, str | None, dict[str, Any] | None]:
+        """Hook method implemented by subclasses to perform check logic."""
+        pass
+
     def validate(
         self, prompt: str, context: dict[str, Any] | None = None
     ) -> ValidationResult:
@@ -87,13 +94,6 @@ class BaseValidator(ABC):
             )
         except Exception as e:
             raise self._handle_exception(e) from e
-
-    @abstractmethod
-    def _validate(
-        self, prompt: str, context: dict[str, Any]
-    ) -> tuple[bool, str | None, dict[str, Any] | None]:
-        """Hook method implemented by subclasses to perform check logic."""
-        pass
 
     def _validate_input(self, prompt: str) -> None:
         """Performs generic framework-level sanity checks on the input prompt."""

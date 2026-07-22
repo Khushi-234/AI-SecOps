@@ -1,4 +1,24 @@
 project-includes = [
-    "**/*.py*",
-    "**/*.ipynb",
+    "input_validator/**/*.py",
+    "security/**/*.py",
+    "scanner/**/*.py",
+    "services/**/*.py",
+    "api/**/*.py",
+    "attacks/**/*.py",
+    "config/**/*.py",
+    "core/**/*.py",
+    "llm/**/*.py",
+    "database/**/*.py",
+    "tests/**/*.py",
+    "*.py",
+]
+
+project-excludes = [
+    "**/venv/**",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/.pytest_cache/**",
+    "**/chroma_data/**",
+    "**/build/**",
+    "**/dist/**",
 ]

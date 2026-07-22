@@ -6,6 +6,7 @@ obfuscations/evasions detection, safe prompt checks, DTO result/metadata compila
 disabled states, exception paths, and regex regression tests.
 """
 
+from typing import Any
 from pathlib import Path
 from unittest.mock import patch
 import pytest
@@ -287,7 +288,7 @@ def test_unexpected_runtime_exception_raises_detector_execution_error(
     detector = default_detector
 
     # Mock _regex_match to raise a generic runtime exception
-    def mock_regex_match(*args: any, **kwargs: any) -> None:
+    def mock_regex_match(*args: Any, **kwargs: Any) -> None:
         raise ValueError("Unexpected processing loop error")
 
     monkeypatch.setattr(detector, "_regex_match", mock_regex_match)

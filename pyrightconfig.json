@@ -1,0 +1,27 @@
+{
+  "include": [
+    "input_validator",
+    "security",
+    "scanner",
+    "services",
+    "api",
+    "attacks",
+    "config",
+    "core",
+    "llm",
+    "database",
+    "tests",
+    "*.py"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "venv",
+    ".venv",
+    ".pytest_cache",
+    "chroma_data"
+  ],
+  "venvPath": ".",
+  "venv": "venv",
+  "pythonVersion": "3.10"
+}
