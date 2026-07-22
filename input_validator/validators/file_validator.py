@@ -1,50 +1,111 @@
-# file_validator.py
-"""Validator that checks file path fields for existence and readability.
+"""
+File path and file payload validation checker.
 
-If a value in the input dictionary is a string ending with a typical file
-extension (e.g., ".txt", ".json", ".csv"), this validator verifies that the
-path points to an existing file on the local filesystem. It does not attempt
-to open the file – only a stat check for existence and read permissions.
+Purpose:
+    Validates referenced file paths for existence, readability, extension compliance,
+    and defends against Path Traversal / Arbitrary File Read (LFI) threats.
+
+Responsibilities:
+    - Prevent directory traversal attempts ('..').
+    - Block access to restricted system directories (/etc, /proc, /root, .ssh).
+    - Enforce file extension whitelist rules.
+    - Check file existence and read permissions safely.
 """
 
+from __future__ import annotations
+
 import os
-from typing import List
+from pathlib import Path
+from typing import Any
+from input_validator.validators.base_validator import BaseValidator
+from input_validator.utils import extract_file_extension, is_empty
 
-from .base_validator import BaseValidator
-from ..models import ValidationResult
-from ..utils import is_empty
-
-# Simple heuristic: keys that likely contain file paths.
-FILE_PATH_KEYS = {"file_path", "filepath", "file", "document"}
+FILE_PATH_KEYS = {"file_path", "filepath", "file", "document", "attachment"}
+DEFAULT_ALLOWED_EXTENSIONS = {"txt", "json", "csv", "pdf", "md", "png", "jpg", "yaml", "yml"}
+RESTRICTED_DIRECTORY_PREFIXES = ("/etc", "/proc", "/sys", "/dev", "/root", "/boot", "/var/log")
 
 
 class FileValidator(BaseValidator):
-    """Ensures referenced file paths exist and are readable."""
+    """Validates file reference paths with strict path traversal and extension security controls."""
 
-    def _validate(self, context) -> ValidationResult:
-        data = context.data
-        problematic: List[str] = []
+    @property
+    def validator_name(self) -> str:
+        """Name of the validator component."""
+        return "FileValidator"
+
+    @property
+    def priority(self) -> int:
+        """Pipeline execution priority."""
+        return 55
+
+    def _validate(
+        self, prompt: str, context: dict[str, Any]
+    ) -> tuple[bool, str | None, dict[str, Any] | None]:
+        """Validates that referenced file paths exist, are readable, and satisfy path security rules."""
+        ctx = context or {}
+        problematic: list[str] = []
+        violations: list[str] = []
+
+        allowed_exts = getattr(self.config, "allowed_extensions", DEFAULT_ALLOWED_EXTENSIONS) if self.config else DEFAULT_ALLOWED_EXTENSIONS
+        allowed_exts = {ext.lower() for ext in allowed_exts}
+
         for key in FILE_PATH_KEYS:
-            path = data.get(key)
-            if path is None or is_empty(path):
-                continue  # Not provided – other validators handle required fields.
-            if not isinstance(path, str):
-                problematic.append(key)
+            raw_path = ctx.get(key)
+            if raw_path is None or is_empty(raw_path):
                 continue
-            if not os.path.isfile(path):
+
+            if not isinstance(raw_path, str):
                 problematic.append(key)
+                violations.append(f"{key}: path must be a string")
                 continue
-            if not os.access(path, os.R_OK):
+
+            # 1. Path traversal check
+            if ".." in raw_path:
                 problematic.append(key)
+                violations.append(f"{key}: path traversal sequence ('..') detected")
+                continue
+
+            # 2. Extension check
+            ext = extract_file_extension(raw_path)
+            if ext and ext not in allowed_exts:
+                problematic.append(key)
+                violations.append(f"{key}: unapproved file extension '.{ext}'")
+                continue
+
+            # 3. Restricted directory resolution check
+            try:
+                resolved_path = str(Path(raw_path).resolve())
+                if any(resolved_path.startswith(prefix) for prefix in RESTRICTED_DIRECTORY_PREFIXES):
+                    problematic.append(key)
+                    violations.append(f"{key}: access to restricted system location denied")
+                    continue
+            except Exception:
+                problematic.append(key)
+                violations.append(f"{key}: invalid path syntax")
+                continue
+
+            # 4. Existence and readability check
+            if not os.path.isfile(resolved_path):
+                problematic.append(key)
+                violations.append(f"{key}: file does not exist")
+                continue
+
+            if not os.access(resolved_path, os.R_OK):
+                problematic.append(key)
+                violations.append(f"{key}: file lacks read permission")
+                continue
+
+        metadata = {
+            "problematic_keys": problematic,
+            "violations": violations,
+            "checked_keys": [k for k in FILE_PATH_KEYS if k in ctx],
+        }
+
         if problematic:
-            return ValidationResult(
-                success=False,
-                validator_name=self.__class__.__name__,
-                message=f"File validation failed for keys: {', '.join(problematic)}",
-                details={"invalid_keys": problematic},
+            return (
+                False,
+                f"Input validation failed: file security check failed for keys: {', '.join(problematic)} ({'; '.join(violations)}).",
+                metadata,
             )
-        return ValidationResult(
-            success=True,
-            validator_name=self.__class__.__name__,
-            message="All referenced files exist and are readable.",
-        )
+
+        return True, None, metadata

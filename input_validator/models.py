@@ -5,7 +5,8 @@ Defines the structures used to convey validation outcomes.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Any, Dict
+from datetime import datetime, timezone
+from typing import List, Any, Dict, Optional
 
 
 @dataclass(frozen=True)
@@ -13,17 +14,36 @@ class ValidationResult:
     """Result of a single validator.
 
     Attributes:
-        success: Whether the validator passed.
         validator_name: Name of the validator class.
-        message: Human‑readable explanation of the result.
-        details: Optional dictionary with validator‑specific data.
+        is_valid: Whether the validator passed.
+        error_message: Human‑readable explanation if validation failed.
+        execution_time_ms: Execution duration in milliseconds.
+        timestamp: Timestamp of when validation completed.
+        metadata: Key-value metadata about the check execution.
     """
-    success: bool
     validator_name: str
-    message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    is_valid: bool
+    error_message: Optional[str] = None
+    execution_time_ms: float = 0.0
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    
+    @property
+    def success(self) -> bool:
+        """Backward-compatible alias for is_valid."""
+        return self.is_valid
+
+    @property
+    def message(self) -> str:
+        """Backward-compatible alias for error_message."""
+        return self.error_message or ""
+
+    @property
+    def details(self) -> Dict[str, Any]:
+        """Backward-compatible alias for metadata."""
+        return self.metadata
+
+
 @dataclass(frozen=True)
 class ConversationMessage:
     """Represents a single message inside a conversation history.
@@ -47,13 +67,24 @@ class ConversationPayload:
     user: str
     history: List[ConversationMessage] = field(default_factory=list)
 
+
 @dataclass(frozen=True)
 class InputValidationResponse:
     """Aggregated response from the whole validation pipeline.
 
     Attributes:
-        success: Overall success – ``True`` only if *all* validators succeeded.
+        is_valid: Overall success – ``True`` only if *all* validators succeeded.
         results: List of :class:`ValidationResult` objects in execution order.
+        execution_time_ms: Total execution duration in milliseconds.
+        metadata: Aggregated telemetry metadata.
     """
-    success: bool
+    is_valid: bool
     results: List[ValidationResult]
+    execution_time_ms: float = 0.0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def success(self) -> bool:
+        """Backward-compatible alias for is_valid."""
+        return self.is_valid
+

@@ -1,22 +1,46 @@
-# simple_validator.py
-"""SimpleValidator mixin providing basic helper methods for validators.
+"""
+SimpleValidator mixin and base class.
 
-Validators can inherit from :class:`SimpleValidator` to get access to common
-utility methods without affecting the abstract ``BaseValidator`` hierarchy.
+Provides lightweight validation capabilities and helper utilities for simple
+rule-based assertions without requiring complex configuration objects.
 """
 
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
+from input_validator.validators.base_validator import BaseValidator
 
 
-class SimpleValidator:
-    """Mixin offering lightweight helpers.
+class SimpleValidator(BaseValidator):
+    """
+    Lightweight Base Validator for single-assertion or rule-based checks.
 
-    Currently provides a ``get_data`` method to retrieve the raw input data
-    from a :class:`~input_validator.context.ValidationContext`.
-    Extend this mixin with additional shared helpers as needed.
+    Defaults config to None and provides convenient context and data extraction helpers.
     """
 
-    def get_data(self, context) -> Dict[str, Any]:
-        """Return the underlying data dictionary from the validation context.
-        """
-        return getattr(context, "data", {})
+    def __init__(self, config: Any = None) -> None:
+        """Initializes SimpleValidator with optional configuration."""
+        super().__init__(config=config)
+
+    @property
+    def validator_name(self) -> str:
+        """Default name for SimpleValidator."""
+        return "SimpleValidator"
+
+    def _validate(
+        self, prompt: str, context: dict[str, Any]
+    ) -> tuple[bool, str | None, dict[str, Any] | None]:
+        """Default validation hook for SimpleValidator (passes by default)."""
+        return True, None, None
+
+    def extract_context_data(self, context: dict[str, Any]) -> dict[str, Any]:
+        """Safely extracts context dictionary data."""
+        if not isinstance(context, dict):
+            return {}
+        return context
+
+    def get_context_key(self, context: dict[str, Any], key: str, default: Any = None) -> Any:
+        """Safely retrieves a key from the context payload."""
+        if not isinstance(context, dict):
+            return default
+        return context.get(key, default)
