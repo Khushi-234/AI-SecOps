@@ -12,7 +12,11 @@ import yaml
 
 from security.base_detector import DetectorConfig
 from security.enums import DetectionStatus, SeverityLevel, ThreatType
-from security.exceptions import ConfigurationError, DetectorExecutionError, RuleLoadingError
+from security.exceptions import (
+    ConfigurationError,
+    DetectorExecutionError,
+    RuleLoadingError,
+)
 from security.models import DetectionResult
 from security.rule_based_detector import RuleBasedDetector
 
@@ -33,7 +37,9 @@ class FakeDetector(RuleBasedDetector):
     def default_severity(self) -> SeverityLevel:
         return SeverityLevel.HIGH
 
-    def __init__(self, default_rule_name: str = "fake", config: DetectorConfig | None = None) -> None:
+    def __init__(
+        self, default_rule_name: str = "fake", config: DetectorConfig | None = None
+    ) -> None:
         super().__init__(default_rule_name=default_rule_name, config=config)
 
 
@@ -61,7 +67,11 @@ def get_valid_rule_dict(overrides: dict[str, Any] | None = None) -> dict[str, An
     return base
 
 
-def write_rule_yaml(path: Path, rules: list[dict[str, Any]], top_level_overrides: dict[str, Any] | None = None) -> None:
+def write_rule_yaml(
+    path: Path,
+    rules: list[dict[str, Any]],
+    top_level_overrides: dict[str, Any] | None = None,
+) -> None:
     """Writes rules to a temporary YAML file."""
     data = {
         "schema_version": "1.0",
@@ -78,6 +88,7 @@ def write_rule_yaml(path: Path, rules: list[dict[str, Any]], top_level_overrides
 # ===========================================================================
 # 1. Rule Loading Tests
 # ===========================================================================
+
 
 def test_valid_yaml_loads_successfully(tmp_path: Path) -> None:
     """Verifies that a well-formed rule configuration file loads without raising errors."""
@@ -154,6 +165,7 @@ def test_empty_rules_list_is_handled_correctly(tmp_path: Path) -> None:
 # 2. Rule Schema Validation Tests
 # ===========================================================================
 
+
 @pytest.mark.parametrize(
     "field_to_remove",
     [
@@ -169,7 +181,9 @@ def test_empty_rules_list_is_handled_correctly(tmp_path: Path) -> None:
         "patterns",
     ],
 )
-def test_missing_required_fields_raise_configuration_error(tmp_path: Path, field_to_remove: str) -> None:
+def test_missing_required_fields_raise_configuration_error(
+    tmp_path: Path, field_to_remove: str
+) -> None:
     """Verifies that omitting any required field inside a rule dict raises ConfigurationError."""
     # Arrange
     yaml_file = tmp_path / "incomplete_rule.yaml"
@@ -187,6 +201,7 @@ def test_missing_required_fields_raise_configuration_error(tmp_path: Path, field
 # ===========================================================================
 # 3. Enum Validation Tests
 # ===========================================================================
+
 
 def test_invalid_threat_type_raises_configuration_error(tmp_path: Path) -> None:
     """Verifies that an invalid threat_type string inside a rule raises a ConfigurationError."""
@@ -218,8 +233,11 @@ def test_invalid_severity_raises_configuration_error(tmp_path: Path) -> None:
 # 4. Confidence Validation Tests
 # ===========================================================================
 
+
 @pytest.mark.parametrize("confidence", [-0.1, 1.1])
-def test_out_of_bounds_confidence_raises_configuration_error(tmp_path: Path, confidence: float) -> None:
+def test_out_of_bounds_confidence_raises_configuration_error(
+    tmp_path: Path, confidence: float
+) -> None:
     """Verifies that confidence outside 0.0 - 1.0 boundary raises a ConfigurationError."""
     # Arrange
     yaml_file = tmp_path / "confidence_err.yaml"
@@ -251,8 +269,11 @@ def test_boundary_confidence_values_pass(tmp_path: Path, confidence: float) -> N
 # 5. Priority Validation Tests
 # ===========================================================================
 
+
 @pytest.mark.parametrize("priority", [-5, "one", 1.5])
-def test_invalid_priorities_raise_configuration_error(tmp_path: Path, priority: Any) -> None:
+def test_invalid_priorities_raise_configuration_error(
+    tmp_path: Path, priority: Any
+) -> None:
     """Verifies that negative, float, or string priorities raise a ConfigurationError."""
     # Arrange
     yaml_file = tmp_path / "priority_err.yaml"
@@ -283,11 +304,14 @@ def test_valid_priority_loads_successfully(tmp_path: Path) -> None:
 # 6. Regex Compilation Tests
 # ===========================================================================
 
+
 def test_valid_regex_compiles_correctly(tmp_path: Path) -> None:
     """Verifies that a valid regex pattern list compiles at construction time."""
     # Arrange
     yaml_file = tmp_path / "regex_valid.yaml"
-    write_rule_yaml(yaml_file, [get_valid_rule_dict({"patterns": [r"\btest\b", r"\d+"]})])
+    write_rule_yaml(
+        yaml_file, [get_valid_rule_dict({"patterns": [r"\btest\b", r"\d+"]})]
+    )
     config = DetectorConfig(rule_file=str(yaml_file))
 
     # Act
@@ -316,6 +340,7 @@ def test_invalid_regex_raises_rule_loading_error(tmp_path: Path) -> None:
 # 7. Detector Disabled Test
 # ===========================================================================
 
+
 def test_disabled_detector_returns_skipped_result(tmp_path: Path) -> None:
     """Verifies that running detect() when enabled=False yields skipped telemetry results."""
     # Arrange
@@ -339,11 +364,14 @@ def test_disabled_detector_returns_skipped_result(tmp_path: Path) -> None:
 # 8. Regex Matching Tests
 # ===========================================================================
 
+
 def test_regex_matching_scenarios(tmp_path: Path) -> None:
     """Verifies regex matching for no-match, single match, and multiple pattern matches."""
     # Arrange
     yaml_file = tmp_path / "regex_scenarios.yaml"
-    write_rule_yaml(yaml_file, [get_valid_rule_dict({"patterns": [r"admin", r"system"]})])
+    write_rule_yaml(
+        yaml_file, [get_valid_rule_dict({"patterns": [r"admin", r"system"]})]
+    )
     config = DetectorConfig(rule_file=str(yaml_file))
     detector = FakeDetector(config=config)
 
@@ -368,6 +396,7 @@ def test_regex_matching_scenarios(tmp_path: Path) -> None:
 # ===========================================================================
 # 9. Keyword Matching Tests
 # ===========================================================================
+
 
 def test_keyword_matching_scenarios(tmp_path: Path) -> None:
     """Verifies tokenized keyword matching for absent, present, and multiple keywords."""
@@ -401,13 +430,22 @@ def test_keyword_matching_scenarios(tmp_path: Path) -> None:
 # 10. Phrase Matching Tests
 # ===========================================================================
 
+
 def test_phrase_matching_scenarios(tmp_path: Path) -> None:
     """Verifies phrase matching for absent, present, and multiple phrase containment."""
     # Arrange
     yaml_file = tmp_path / "phrase_scenarios.yaml"
     write_rule_yaml(
         yaml_file,
-        [get_valid_rule_dict({"patterns": [], "keywords": [], "phrases": ["ignore prior", "reveal keys"]})],
+        [
+            get_valid_rule_dict(
+                {
+                    "patterns": [],
+                    "keywords": [],
+                    "phrases": ["ignore prior", "reveal keys"],
+                }
+            )
+        ],
     )
     config = DetectorConfig(rule_file=str(yaml_file))
     detector = FakeDetector(config=config)
@@ -432,15 +470,26 @@ def test_phrase_matching_scenarios(tmp_path: Path) -> None:
 # 11. Winning Rule Selection Test
 # ===========================================================================
 
+
 def test_winning_rule_selection_by_priority(tmp_path: Path) -> None:
     """Verifies the rule with the lowest priority value is returned on multi-rule matches."""
     # Arrange
     yaml_file = tmp_path / "winning_selection.yaml"
     rule_low_prio = get_valid_rule_dict(
-        {"rule_id": "RULE-LOW", "rule_name": "Low priority", "priority": 10, "patterns": ["(?i)trigger"]}
+        {
+            "rule_id": "RULE-LOW",
+            "rule_name": "Low priority",
+            "priority": 10,
+            "patterns": ["(?i)trigger"],
+        }
     )
     rule_high_prio = get_valid_rule_dict(
-        {"rule_id": "RULE-HIGH", "rule_name": "High priority", "priority": 2, "patterns": ["(?i)trigger"]}
+        {
+            "rule_id": "RULE-HIGH",
+            "rule_name": "High priority",
+            "priority": 2,
+            "patterns": ["(?i)trigger"],
+        }
     )
     # Write rule with priority 10 first
     write_rule_yaml(yaml_file, [rule_low_prio, rule_high_prio])
@@ -458,6 +507,7 @@ def test_winning_rule_selection_by_priority(tmp_path: Path) -> None:
 # ===========================================================================
 # 12 & 13. DetectionResult & Metadata Fields Verification
 # ===========================================================================
+
 
 def test_detection_result_structure_and_metadata_keys(tmp_path: Path) -> None:
     """Verifies that all standard DetectionResult fields and metadata elements populate correctly."""
@@ -498,6 +548,7 @@ def test_detection_result_structure_and_metadata_keys(tmp_path: Path) -> None:
 # 14. Timing Verification
 # ===========================================================================
 
+
 def test_execution_time_is_non_negative(tmp_path: Path) -> None:
     """Verifies that processing execution timing metrics are recorded and non-negative."""
     # Arrange
@@ -517,7 +568,10 @@ def test_execution_time_is_non_negative(tmp_path: Path) -> None:
 # 15. Exception Handling Tests
 # ===========================================================================
 
-def test_unexpected_runtime_exception_raises_detector_execution_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+
+def test_unexpected_runtime_exception_raises_detector_execution_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verifies that an unexpected runtime crash is mapped to a DetectorExecutionError."""
     # Arrange
     yaml_file = tmp_path / "runtime_err.yaml"
@@ -541,6 +595,7 @@ def test_unexpected_runtime_exception_raises_detector_execution_error(tmp_path: 
 # 16. Internal Helper Methods Testing
 # ===========================================================================
 
+
 def test_internal_helpers_direct_execution(tmp_path: Path) -> None:
     """Explicitly verifies private matching helpers and DTO compilation logic."""
     # Arrange
@@ -558,13 +613,17 @@ def test_internal_helpers_direct_execution(tmp_path: Path) -> None:
     assert count_rx == 1
 
     # 2. Test _keyword_match
-    text_kw, pattern_kw, count_kw = detector._keyword_match("action triggerword", rule, ["action", "triggerword"])
+    text_kw, pattern_kw, count_kw = detector._keyword_match(
+        "action triggerword", rule, ["action", "triggerword"]
+    )
     assert text_kw == "triggerword"
     assert pattern_kw == "keyword: triggerword"
     assert count_kw == 1
 
     # 3. Test _phrase_match
-    text_ph, pattern_ph, count_ph = detector._phrase_match("please trigger phrase now", rule)
+    text_ph, pattern_ph, count_ph = detector._phrase_match(
+        "please trigger phrase now", rule
+    )
     assert text_ph == "trigger phrase"
     assert pattern_ph == "phrase: trigger phrase"
     assert count_ph == 1

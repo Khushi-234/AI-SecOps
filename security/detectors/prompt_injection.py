@@ -1,7 +1,7 @@
 """
 Prompt Injection Detector Module
 
-Detects direct prompt injection attacks aiming to override system prompts or 
+Detects direct prompt injection attacks aiming to override system prompts or
 force arbitrary response control.
 """
 
@@ -13,10 +13,12 @@ from security.enums import SeverityLevel, ThreatType
 
 RULE_NAME = "prompt_injection"
 
+
 class PromptInjectionDetector(RuleBasedDetector):
     """
     Checks for instructions designed to bypass or ignore context boundaries and instructions.
     """
+
     @property
     def detector_name(self) -> str:
         return "PromptInjectionDetector"

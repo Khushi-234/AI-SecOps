@@ -13,6 +13,7 @@ from security.enums import SeverityLevel, ThreatType
 
 RULE_NAME = "delimiter"
 
+
 class DelimiterEscapeDetector(RuleBasedDetector):
     """
     Checks for structured tag injections or escape keywords in user prompt structures.

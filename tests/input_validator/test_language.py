@@ -18,7 +18,6 @@ from input_validator.exceptions import ValidationExecutionError
 from input_validator.models import ValidationResult
 from input_validator.validators.language import LanguageValidator
 
-
 # ===========================================================================
 # Mock Detector Adapters
 # ===========================================================================
@@ -211,7 +210,10 @@ class TestUnsupportedLanguages:
         assert result.metadata["language_supported"] is False
         assert result.metadata["validation_passed"] is True
         assert "warning" in result.metadata
-        assert "Detected language 'unknown' is not in supported list" in result.metadata["warning"]
+        assert (
+            "Detected language 'unknown' is not in supported list"
+            in result.metadata["warning"]
+        )
 
     def test_unsupported_language_hard_failure_mode(self) -> None:
         # Arrange
@@ -228,7 +230,10 @@ class TestUnsupportedLanguages:
         # Assert
         assert result.validator_name == "LanguageValidator"
         assert result.is_valid is False
-        assert result.error_message == "Input validation failed: detected language 'unknown' is not supported."
+        assert (
+            result.error_message
+            == "Input validation failed: detected language 'unknown' is not supported."
+        )
         assert result.metadata["detected_language"] == "unknown"
         assert result.metadata["language_supported"] is False
         assert result.metadata["validation_passed"] is False
@@ -262,9 +267,7 @@ class TestCustomDetector:
     def test_object_detector_single_return_value(self) -> None:
         # Arrange
         detector = MockObjectDetectorSingle("fr")
-        config = LanguageConfig(
-            supported_languages=["fr", "en"], detector=detector
-        )
+        config = LanguageConfig(supported_languages=["fr", "en"], detector=detector)
         validator = LanguageValidator(config=config)
 
         # Act
@@ -281,9 +284,7 @@ class TestCustomDetector:
     def test_object_detector_tuple_return_value(self) -> None:
         # Arrange
         detector = MockObjectDetectorTuple("es", 0.95)
-        config = LanguageConfig(
-            supported_languages=["es", "en"], detector=detector
-        )
+        config = LanguageConfig(supported_languages=["es", "en"], detector=detector)
         validator = LanguageValidator(config=config)
 
         # Act
@@ -300,9 +301,7 @@ class TestCustomDetector:
     def test_callable_detector_single_return_value(self) -> None:
         # Arrange
         detector = MockCallableDetectorSingle("de")
-        config = LanguageConfig(
-            supported_languages=["de", "en"], detector=detector
-        )
+        config = LanguageConfig(supported_languages=["de", "en"], detector=detector)
         validator = LanguageValidator(config=config)
 
         # Act
@@ -317,9 +316,7 @@ class TestCustomDetector:
     def test_callable_detector_tuple_return_value(self) -> None:
         # Arrange
         detector = MockCallableDetectorTuple("ja", 0.88)
-        config = LanguageConfig(
-            supported_languages=["ja", "en"], detector=detector
-        )
+        config = LanguageConfig(supported_languages=["ja", "en"], detector=detector)
         validator = LanguageValidator(config=config)
 
         # Act
@@ -334,9 +331,7 @@ class TestCustomDetector:
     def test_custom_detector_preferred_over_heuristic(self) -> None:
         # Arrange - English text, but custom detector returns "hi"
         detector = MockObjectDetectorTuple("hi", 0.99)
-        config = LanguageConfig(
-            supported_languages=["hi", "en"], detector=detector
-        )
+        config = LanguageConfig(supported_languages=["hi", "en"], detector=detector)
         validator = LanguageValidator(config=config)
 
         # Act
@@ -373,7 +368,9 @@ class TestCustomDetector:
             validator.validate("any text prompt")
 
         assert exc_info.type is ValidationExecutionError
-        assert "Unexpected crash in validator 'LanguageValidator'" in str(exc_info.value)
+        assert "Unexpected crash in validator 'LanguageValidator'" in str(
+            exc_info.value
+        )
         assert isinstance(exc_info.value.__cause__, RuntimeError)
         assert str(exc_info.value.__cause__) == "Custom detector pipeline failure"
 
@@ -467,9 +464,7 @@ class TestMetadata:
 
     def test_metadata_structure_on_success(self) -> None:
         # Arrange
-        config = LanguageConfig(
-            supported_languages=["en", "hi"], default_language="en"
-        )
+        config = LanguageConfig(supported_languages=["en", "hi"], default_language="en")
         validator = LanguageValidator(config=config)
         context = {"request_id": "req-lang-pass"}
 

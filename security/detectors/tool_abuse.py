@@ -1,7 +1,7 @@
 """
 Tool Abuse Detector Module
 
-Detects queries attempting to abuse external tools or execute unauthorized code 
+Detects queries attempting to abuse external tools or execute unauthorized code
 (e.g., shell command execution, file deletion, arbitrary python code execution).
 """
 
@@ -10,7 +10,6 @@ from __future__ import annotations
 from security.base_detector import DetectorConfig
 from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
-
 
 RULE_NAME = "tool_abuse"
 

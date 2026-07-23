@@ -355,8 +355,12 @@ class TestLanguageConfig:
 
     def test_independent_instances_state_isolation(self) -> None:
         # Arrange
-        config_1 = LanguageConfig(supported_languages=["en", "hi"], default_language="en")
-        config_2 = LanguageConfig(supported_languages=["en", "hi"], default_language="en")
+        config_1 = LanguageConfig(
+            supported_languages=["en", "hi"], default_language="en"
+        )
+        config_2 = LanguageConfig(
+            supported_languages=["en", "hi"], default_language="en"
+        )
 
         # Act
         config_1.supported_languages.clear()

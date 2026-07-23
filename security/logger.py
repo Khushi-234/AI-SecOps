@@ -8,12 +8,16 @@ import logging
 
 logger = logging.getLogger("prompt_firewall")
 
+
 class FirewallLogger:
     """
     Log manager for the Prompt Firewall.
     """
+
     @staticmethod
-    def log_detection(detector_name: str, threat_type: str, severity: str, confidence: float) -> None:
+    def log_detection(
+        detector_name: str, threat_type: str, severity: str, confidence: float
+    ) -> None:
         """
         Logs a security threat detection event.
         """
@@ -26,4 +30,6 @@ class FirewallLogger:
         """
         Logs an execution error in a detector.
         """
-        logger.error(f"[DETECTOR ERROR] Detector: {detector_name} | Error: {error_message}")
+        logger.error(
+            f"[DETECTOR ERROR] Detector: {detector_name} | Error: {error_message}"
+        )

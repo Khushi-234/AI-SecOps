@@ -5,11 +5,7 @@ def main():
 
     builder = PromptBuilder()
 
-    prompt = builder.build_prompt(
-
-        "Explain what Machine Learning is."
-
-    )
+    prompt = builder.build_prompt("Explain what Machine Learning is.")
 
     print()
 

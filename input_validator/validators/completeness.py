@@ -32,15 +32,26 @@ class CompletenessValidator(BaseValidator):
     def priority(self) -> int:
         """Pipeline execution priority."""
         return 65
-        
 
     def _validate(
         self, prompt: str, context: dict[str, Any]
     ) -> tuple[bool, str | None, dict[str, Any] | None]:
         """Validates that all required attributes are present and non-empty."""
         ctx = context or {}
-        required = getattr(self.config, "required_fields", DEFAULT_REQUIRED_FIELDS) if self.config else DEFAULT_REQUIRED_FIELDS
-        required_set = set(required) if isinstance(required, (list, set, tuple)) else set(required.keys()) if isinstance(required, dict) else DEFAULT_REQUIRED_FIELDS
+        required = (
+            getattr(self.config, "required_fields", DEFAULT_REQUIRED_FIELDS)
+            if self.config
+            else DEFAULT_REQUIRED_FIELDS
+        )
+        required_set = (
+            set(required)
+            if isinstance(required, (list, set, tuple))
+            else (
+                set(required.keys())
+                if isinstance(required, dict)
+                else DEFAULT_REQUIRED_FIELDS
+            )
+        )
 
         missing_fields: list[str] = []
 

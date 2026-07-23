@@ -67,6 +67,8 @@ class EncodingValidator(BaseValidator):
         metadata = {
             "encoding": "UTF-8",
             "has_surrogates": False,
-            "checked_context_byte_keys": len([v for v in ctx.values() if isinstance(v, bytes)]),
+            "checked_context_byte_keys": len(
+                [v for v in ctx.values() if isinstance(v, bytes)]
+            ),
         }
         return True, None, metadata

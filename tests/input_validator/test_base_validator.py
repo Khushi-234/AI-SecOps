@@ -15,7 +15,6 @@ from input_validator.exceptions import ValidationError, ValidationExecutionError
 from input_validator.models import ValidationResult
 from input_validator.validators.base_validator import BaseValidator
 
-
 # ===========================================================================
 # Test Doubles (Fake Validators)
 # ===========================================================================
@@ -244,9 +243,7 @@ class TestLifecycle:
             "\n\t\r Special Characters \0",  # Control characters
         ],
     )
-    def test_unicode_and_edge_case_prompts_lifecycle(
-        self, complex_prompt: str
-    ) -> None:
+    def test_unicode_and_edge_case_prompts_lifecycle(self, complex_prompt: str) -> None:
         # Arrange
         validator = AlwaysPassValidator(config=None)
 
@@ -490,7 +487,9 @@ class TestExceptionHandling:
             validator.validate(prompt)
 
         assert exc_info.type is ValidationExecutionError
-        assert "Unexpected crash in validator 'exception_validator'" in str(exc_info.value)
+        assert "Unexpected crash in validator 'exception_validator'" in str(
+            exc_info.value
+        )
         assert isinstance(exc_info.value.__cause__, RuntimeError)
         assert str(exc_info.value.__cause__) == "Unexpected database connection crash"
         assert exc_info.value.details["validator_name"] == "exception_validator"

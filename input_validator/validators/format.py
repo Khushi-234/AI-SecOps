@@ -46,7 +46,11 @@ class FormatValidator(BaseValidator):
         checked_fields: list[str] = []
 
         # Check configured format rules against context fields
-        rules = getattr(self.config, "format_rules", DEFAULT_FORMAT_RULES) if self.config else DEFAULT_FORMAT_RULES
+        rules = (
+            getattr(self.config, "format_rules", DEFAULT_FORMAT_RULES)
+            if self.config
+            else DEFAULT_FORMAT_RULES
+        )
 
         for field_name, pattern in rules.items():
             if field_name in ctx:

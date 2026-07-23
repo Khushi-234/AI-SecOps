@@ -4,10 +4,11 @@ from enum import Enum
 class SeverityLevel(str, Enum):
     """
     Classification levels for threat severity rating within the framework.
-    
+
     Used to indicate the severity of a security violation flagged by a detector.
     Inherits from str to ensure easy JSON and database serialization.
     """
+
     INFORMATIONAL = "INFORMATIONAL"
     LOW = "LOW"
     MEDIUM = "MEDIUM"
@@ -18,10 +19,11 @@ class SeverityLevel(str, Enum):
 class DetectionStatus(str, Enum):
     """
     Execution outcome status of a single detector run.
-    
+
     Used to trace pipeline health, trace timeouts, or capture errors
     occurring within individual detector modules.
     """
+
     SUCCESS = "SUCCESS"
     SKIPPED = "SKIPPED"
     ERROR = "ERROR"
@@ -30,9 +32,10 @@ class DetectionStatus(str, Enum):
 class ThreatType(str, Enum):
     """
     Standard classification of security vulnerabilities handled by the framework.
-    
+
     These represent the targeted threat types evaluated by prompt detectors.
     """
+
     NONE = "NONE"
     PROMPT_INJECTION = "PROMPT_INJECTION"
     JAILBREAK = "JAILBREAK"

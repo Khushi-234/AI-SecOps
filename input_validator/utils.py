@@ -52,15 +52,16 @@ def parse_raw_payload(data: Any) -> Optional[ConversationPayload]:
             parsed_history.append(ConversationMessage(role=role, content=content))
         else:
             # Preserve invalid history items with a placeholder role to let ContextValidator fail it
-            parsed_history.append(ConversationMessage(role="invalid_structure", content=str(item)))
+            parsed_history.append(
+                ConversationMessage(role="invalid_structure", content=str(item))
+            )
 
     return ConversationPayload(user=user_prompt, history=parsed_history)
 
 
 def normalize_unicode_text(
-    text: str, 
-    form: Literal["NFC", "NFD", "NFKC", "NFKD"] = "NFKC"
-    ) -> str:
+    text: str, form: Literal["NFC", "NFD", "NFKC", "NFKD"] = "NFKC"
+) -> str:
     """Normalizes Unicode text to prevent visual spoofing and encoding tricks.
 
     Args:
@@ -121,7 +122,7 @@ def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
 
 
 def is_empty(value: Any) -> bool:
-    """Return ``True`` if *value* is considered empty.    """
+    """Return ``True`` if *value* is considered empty."""
     if value is None:
         return True
     if isinstance(value, (str, bytes)) and len(value) == 0:

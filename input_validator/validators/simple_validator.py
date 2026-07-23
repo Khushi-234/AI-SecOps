@@ -39,7 +39,9 @@ class SimpleValidator(BaseValidator):
             return {}
         return context
 
-    def get_context_key(self, context: dict[str, Any], key: str, default: Any = None) -> Any:
+    def get_context_key(
+        self, context: dict[str, Any], key: str, default: Any = None
+    ) -> Any:
         """Safely retrieves a key from the context payload."""
         if not isinstance(context, dict):
             return default

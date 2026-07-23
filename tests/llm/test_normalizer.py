@@ -60,7 +60,9 @@ def test_normalization_config_invalid_form_raises() -> None:
         {"prompt": "text"},
     ],
 )
-def test_input_validation_invalid_types_raise(default_normalizer: TextNormalizer, invalid_input: Any) -> None:
+def test_input_validation_invalid_types_raise(
+    default_normalizer: TextNormalizer, invalid_input: Any
+) -> None:
     """Verifies that invalid input types raise a ValidationError."""
     # Arrange, Act & Assert
     with pytest.raises(ValidationError) as exc_info:
@@ -77,7 +79,10 @@ def test_input_validation_invalid_types_raise(default_normalizer: TextNormalizer
     ],
 )
 def test_input_validation_boundaries(
-    default_normalizer: TextNormalizer, text: str, expected_normalized: str, expected_removed: int
+    default_normalizer: TextNormalizer,
+    text: str,
+    expected_normalized: str,
+    expected_removed: int,
 ) -> None:
     """Verifies boundary text cases produce correct output strings and removal counts."""
     # Arrange & Act
@@ -88,7 +93,9 @@ def test_input_validation_boundaries(
     assert result.metadata.characters_removed == expected_removed
 
 
-def test_unicode_normalization_nfkc_collapsing(default_normalizer: TextNormalizer) -> None:
+def test_unicode_normalization_nfkc_collapsing(
+    default_normalizer: TextNormalizer,
+) -> None:
     """Verifies NFKC collapses compatibility variants (superscripts, ligatures) properly."""
     # Arrange
     text = "2⁵ and ﬁ"  # superscript 5 and ligature fi
@@ -117,14 +124,16 @@ def test_unicode_normalization_homoglyph(default_normalizer: TextNormalizer) -> 
 @pytest.mark.parametrize(
     "invisible_char, name",
     [
-        ("\u200B", "Zero Width Space"),
-        ("\u200C", "Zero Width Non-Joiner"),
-        ("\u200D", "Zero Width Joiner"),
+        ("\u200b", "Zero Width Space"),
+        ("\u200c", "Zero Width Non-Joiner"),
+        ("\u200d", "Zero Width Joiner"),
         ("\u2060", "Word Joiner"),
-        ("\uFEFF", "BOM / Zero Width No-Break Space"),
+        ("\ufeff", "BOM / Zero Width No-Break Space"),
     ],
 )
-def test_invisible_character_removal(default_normalizer: TextNormalizer, invisible_char: str, name: str) -> None:
+def test_invisible_character_removal(
+    default_normalizer: TextNormalizer, invisible_char: str, name: str
+) -> None:
     """Verifies different types of invisible characters are successfully stripped."""
     # Arrange
     text = f"P{invisible_char}r{invisible_char}o{invisible_char}m{invisible_char}p{invisible_char}t"
@@ -142,11 +151,13 @@ def test_invisible_character_removal(default_normalizer: TextNormalizer, invisib
     [
         ("\x00", "NULL"),
         ("\x07", "BEL"),
-        ("\x0B", "Vertical Tab"),
-        ("\x7F", "DEL"),
+        ("\x0b", "Vertical Tab"),
+        ("\x7f", "DEL"),
     ],
 )
-def test_control_character_removal(default_normalizer: TextNormalizer, control_char: str, name: str) -> None:
+def test_control_character_removal(
+    default_normalizer: TextNormalizer, control_char: str, name: str
+) -> None:
     """Verifies control characters are cleanly removed and logged in metadata."""
     # Arrange
     text = f"Clean{control_char}Text"
@@ -164,12 +175,19 @@ def test_control_character_removal(default_normalizer: TextNormalizer, control_c
     "input_text, expected_output, expected_removals",
     [
         ("Multiple   spaces", "Multiple spaces", 1),
-        ("With\ttabs", "With tabs", 1),  # Tab is collapsed to single space (length unchanged)
+        (
+            "With\ttabs",
+            "With tabs",
+            1,
+        ),  # Tab is collapsed to single space (length unchanged)
         ("Mixed \t  whitespace", "Mixed whitespace", 1),
     ],
 )
 def test_whitespace_normalization_standard(
-    default_normalizer: TextNormalizer, input_text: str, expected_output: str, expected_removals: int
+    default_normalizer: TextNormalizer,
+    input_text: str,
+    expected_output: str,
+    expected_removals: int,
 ) -> None:
     """Verifies standard whitespace collapses to single spaces and trims margins."""
     # Arrange & Act
@@ -195,7 +213,9 @@ def test_whitespace_normalization_preserve_newlines() -> None:
     assert result.metadata.characters_removed > 0
 
 
-def test_whitespace_normalization_strip_newlines(default_normalizer: TextNormalizer) -> None:
+def test_whitespace_normalization_strip_newlines(
+    default_normalizer: TextNormalizer,
+) -> None:
     """Verifies newlines collapse to single horizontal spaces under default settings."""
     # Arrange
     text = "Line 1\nLine 2\n\nLine 3"
@@ -207,7 +227,9 @@ def test_whitespace_normalization_strip_newlines(default_normalizer: TextNormali
     assert result.normalized_text == "Line 1 Line 2 Line 3"
 
 
-def test_returned_objects_and_metadata_fields(default_normalizer: TextNormalizer) -> None:
+def test_returned_objects_and_metadata_fields(
+    default_normalizer: TextNormalizer,
+) -> None:
     """Verifies result and metadata classes contain all necessary fields and correct typings."""
     # Arrange
     text = "Test prompt."
@@ -264,7 +286,7 @@ def test_normalization_serialization(default_normalizer: TextNormalizer) -> None
     # Validate result dictionary structure
     assert serialized_result["normalized_text"] == "Hello World"
     assert "metadata" in serialized_result
-    
+
     # Validate metadata dictionary structure
     assert serialized_metadata["characters_removed"] == 2
     assert serialized_metadata["unicode_changes"] == 0

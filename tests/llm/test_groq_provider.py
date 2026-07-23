@@ -5,9 +5,7 @@ def main():
 
     provider = GroqProvider()
 
-    response = provider.generate_response(
-        "Say hello in one sentence."
-    )
+    response = provider.generate_response("Say hello in one sentence.")
 
     print()
 

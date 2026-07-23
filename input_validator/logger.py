@@ -10,8 +10,7 @@ import sys
 
 
 def setup_validator_logger(
-    name: str = "input_validator",
-    level: int = logging.INFO
+    name: str = "input_validator", level: int = logging.INFO
 ) -> logging.Logger:
     """Configures and returns a thread-safe central logger for input validation.
 
@@ -32,7 +31,7 @@ def setup_validator_logger(
 
         formatter = logging.Formatter(
             fmt="[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)

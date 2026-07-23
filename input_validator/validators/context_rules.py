@@ -45,10 +45,18 @@ class ContextRulesValidator(BaseValidator):
         # 1. Enforce history type constraint
         if not isinstance(history, list):
             metadata = {"reason": "invalid_history_type"}
-            return False, "Input validation failed: context history must be a list.", metadata
+            return (
+                False,
+                "Input validation failed: context history must be a list.",
+                metadata,
+            )
 
         # 2. Enforce turn count limit
-        max_turns = getattr(self.config, "max_history_turns", DEFAULT_MAX_TURNS) if self.config else DEFAULT_MAX_TURNS
+        max_turns = (
+            getattr(self.config, "max_history_turns", DEFAULT_MAX_TURNS)
+            if self.config
+            else DEFAULT_MAX_TURNS
+        )
         if len(history) > max_turns:
             metadata = {"turn_count": len(history), "max_turns": max_turns}
             return (
@@ -58,7 +66,11 @@ class ContextRulesValidator(BaseValidator):
             )
 
         # 3. Role and length verification
-        allowed_roles = getattr(self.config, "allowed_roles", DEFAULT_ALLOWED_ROLES) if self.config else DEFAULT_ALLOWED_ROLES
+        allowed_roles = (
+            getattr(self.config, "allowed_roles", DEFAULT_ALLOWED_ROLES)
+            if self.config
+            else DEFAULT_ALLOWED_ROLES
+        )
         allowed_roles = set(allowed_roles)
         total_chars = len(prompt)
         invalid_role_found = None
@@ -82,7 +94,11 @@ class ContextRulesValidator(BaseValidator):
 
         if invalid_role_found:
             idx, role = invalid_role_found
-            metadata = {"index": idx, "invalid_role": role, "allowed_roles": list(allowed_roles)}
+            metadata = {
+                "index": idx,
+                "invalid_role": role,
+                "allowed_roles": list(allowed_roles),
+            }
             return (
                 False,
                 f"Input validation failed: invalid role '{role}' detected in history at index {idx}.",
@@ -90,7 +106,11 @@ class ContextRulesValidator(BaseValidator):
             )
 
         # 4. Total character count sanity check
-        max_chars = getattr(self.config, "max_total_chars", DEFAULT_MAX_CONTEXT_CHARS) if self.config else DEFAULT_MAX_CONTEXT_CHARS
+        max_chars = (
+            getattr(self.config, "max_total_chars", DEFAULT_MAX_CONTEXT_CHARS)
+            if self.config
+            else DEFAULT_MAX_CONTEXT_CHARS
+        )
         if total_chars > max_chars:
             metadata = {"total_chars": total_chars, "max_chars": max_chars}
             return (

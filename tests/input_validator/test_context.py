@@ -3,7 +3,11 @@
 
 import pytest
 from input_validator.context import ValidationContext
-from input_validator.models import ConversationPayload, ConversationMessage, ValidationResult
+from input_validator.models import (
+    ConversationPayload,
+    ConversationMessage,
+    ValidationResult,
+)
 
 
 class TestValidationContext:
@@ -17,9 +21,7 @@ class TestValidationContext:
 
     def test_custom_initialization(self) -> None:
         context_validator = ValidationContext(
-            max_history_turns=10,
-            max_total_chars=1000,
-            allowed_roles=["user", "admin"]
+            max_history_turns=10, max_total_chars=1000, allowed_roles=["user", "admin"]
         )
         assert context_validator.max_history_turns == 10
         assert context_validator.max_total_chars == 1000
@@ -30,10 +32,14 @@ class TestValidationContext:
         payload = ConversationPayload(
             user="What is the weather today?",
             history=[
-                ConversationMessage(role="system", content="You are a helpful assistant."),
+                ConversationMessage(
+                    role="system", content="You are a helpful assistant."
+                ),
                 ConversationMessage(role="user", content="Hello!"),
-                ConversationMessage(role="assistant", content="Hi there! How can I help?")
-            ]
+                ConversationMessage(
+                    role="assistant", content="Hi there! How can I help?"
+                ),
+            ],
         )
         result = context_validator.validate(payload)
         assert isinstance(result, ValidationResult)
@@ -64,8 +70,7 @@ class TestValidationContext:
     def test_exceeds_max_history_turns(self) -> None:
         context_validator = ValidationContext(max_history_turns=2)
         history = [
-            ConversationMessage(role="user", content=f"Turn {i}")
-            for i in range(3)
+            ConversationMessage(role="user", content=f"Turn {i}") for i in range(3)
         ]
         payload = ConversationPayload(user="Latest query", history=history)
         result = context_validator.validate(payload)
@@ -81,7 +86,7 @@ class TestValidationContext:
             user="Hello",
             history=[
                 ConversationMessage(role="system", content="System prompt"),
-            ]
+            ],
         )
         result = context_validator.validate(payload)
         assert result.is_valid is False
@@ -93,10 +98,7 @@ class TestValidationContext:
     def test_exceeds_max_total_chars(self) -> None:
         context_validator = ValidationContext(max_total_chars=50)
         payload = ConversationPayload(
-            user="A" * 30,
-            history=[
-                ConversationMessage(role="user", content="B" * 30)
-            ]
+            user="A" * 30, history=[ConversationMessage(role="user", content="B" * 30)]
         )
         result = context_validator.validate(payload)
         assert result.is_valid is False

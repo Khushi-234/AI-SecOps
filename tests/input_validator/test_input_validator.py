@@ -24,7 +24,6 @@ from input_validator.models import InputValidationResponse, ValidationResult
 from input_validator.pipeline import ValidationPipeline
 from input_validator.validators.base_validator import BaseValidator
 
-
 # ===========================================================================
 # Lightweight Mocks for Facade Delegation Testing
 # ===========================================================================
@@ -33,7 +32,9 @@ from input_validator.validators.base_validator import BaseValidator
 class MockValidatorForFacade(BaseValidator):
     """Lightweight mock validator for testing facade delegation."""
 
-    def __init__(self, priority: int = 10, name: str = "MockValidatorForFacade") -> None:
+    def __init__(
+        self, priority: int = 10, name: str = "MockValidatorForFacade"
+    ) -> None:
         super().__init__(config=None)
         self._priority = priority
         self._name = name
@@ -90,7 +91,9 @@ class MockPipeline:
     def unregister_validator(self, validator_name: str) -> None:
         self.calls.append(("unregister_validator", (validator_name,), {}))
         self.registered_validators_list = [
-            v for v in self.registered_validators_list if v.validator_name != validator_name
+            v
+            for v in self.registered_validators_list
+            if v.validator_name != validator_name
         ]
 
     def get_registered_validators(self) -> list[BaseValidator]:
@@ -172,7 +175,10 @@ class TestConstructor:
 
         # Assert - The externally injected pipeline is used directly
         assert validator.pipeline is mock_pipeline
-        assert validator.registered_validators() == mock_pipeline.registered_validators_list
+        assert (
+            validator.registered_validators()
+            == mock_pipeline.registered_validators_list
+        )
         assert ignored_v1 not in mock_pipeline.registered_validators_list
 
     def test_health_diagnostic_report(self) -> None:
@@ -328,9 +334,7 @@ class TestArgumentValidation:
             ("x" * 100_000, "large prompt string"),
         ],
     )
-    def test_valid_prompts_accepted(
-        self, valid_prompt: str, description: str
-    ) -> None:
+    def test_valid_prompts_accepted(self, valid_prompt: str, description: str) -> None:
         # Arrange
         mock_pipeline = MockPipeline()
         validator = InputValidator(pipeline=mock_pipeline)  # type: ignore

@@ -28,7 +28,7 @@ class TestEncodingValidator:
     def test_prompt_with_unpaired_surrogates(self) -> None:
         validator = EncodingValidator(config=None)
         # High surrogate character without low surrogate
-        surrogate_prompt = "Corrupt unicode \uD800 char"
+        surrogate_prompt = "Corrupt unicode \ud800 char"
         result = validator.validate(surrogate_prompt, {})
         assert result.is_valid is False
         assert result.error_message is not None

@@ -45,7 +45,7 @@ class TestModels:
     def test_conversation_payload_with_history(self) -> None:
         msgs = [
             ConversationMessage(role="system", content="Init"),
-            ConversationMessage(role="user", content="Hi")
+            ConversationMessage(role="user", content="Hi"),
         ]
         payload = ConversationPayload(user="Main query", history=msgs)
         assert payload.user == "Main query"
@@ -54,7 +54,9 @@ class TestModels:
 
     def test_input_validation_response_defaults_and_fields(self) -> None:
         v_res = ValidationResult(validator_name="TestVal", is_valid=True)
-        resp = InputValidationResponse(is_valid=True, results=[v_res], execution_time_ms=1.5)
+        resp = InputValidationResponse(
+            is_valid=True, results=[v_res], execution_time_ms=1.5
+        )
         assert resp.is_valid is True
         assert len(resp.results) == 1
         assert resp.execution_time_ms == 1.5

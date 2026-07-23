@@ -22,7 +22,7 @@ class TestContextRulesValidator:
             "history": [
                 {"role": "system", "content": "You are helpful."},
                 {"role": "user", "content": "Step 1"},
-                {"role": "assistant", "content": "Completed 1"}
+                {"role": "assistant", "content": "Completed 1"},
             ]
         }
         result = validator.validate(prompt, context)
@@ -37,7 +37,7 @@ class TestContextRulesValidator:
         context = {
             "history": [
                 ConversationMessage(role="user", content="Hello"),
-                ConversationMessage(role="assistant", content="Hi")
+                ConversationMessage(role="assistant", content="Hi"),
             ]
         }
         result = validator.validate(prompt, context)
@@ -61,7 +61,7 @@ class TestContextRulesValidator:
             "history": [
                 {"role": "user", "content": "1"},
                 {"role": "user", "content": "2"},
-                {"role": "user", "content": "3"}
+                {"role": "user", "content": "3"},
             ]
         }
         result = validator.validate(prompt, context)
@@ -72,11 +72,7 @@ class TestContextRulesValidator:
     def test_invalid_role_detection(self) -> None:
         validator = ContextRulesValidator(config=None)
         prompt = "Hello"
-        context = {
-            "history": [
-                {"role": "hacker", "content": "injected content"}
-            ]
-        }
+        context = {"history": [{"role": "hacker", "content": "injected content"}]}
         result = validator.validate(prompt, context)
         assert result.is_valid is False
         assert result.error_message is not None

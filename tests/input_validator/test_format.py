@@ -21,7 +21,7 @@ class TestFormatValidator:
         context = {
             "email": "user@example.com",
             "uuid": "123e4567-e89b-12d3-a456-426614174000",
-            "url": "https://example.com/api/v1"
+            "url": "https://example.com/api/v1",
         }
         result = validator.validate(prompt, context)
         assert isinstance(result, ValidationResult)
@@ -55,7 +55,7 @@ class TestFormatValidator:
 
     def test_expected_json_format_prompt_failure(self) -> None:
         validator = FormatValidator(config=None)
-        prompt = 'Not a JSON object'
+        prompt = "Not a JSON object"
         context = {"expected_format": "json"}
         result = validator.validate(prompt, context)
         assert result.is_valid is False

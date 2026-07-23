@@ -21,6 +21,7 @@ class ValidationResult:
         timestamp: Timestamp of when validation completed.
         metadata: Key-value metadata about the check execution.
     """
+
     validator_name: str
     is_valid: bool
     error_message: Optional[str] = None
@@ -52,6 +53,7 @@ class ConversationMessage:
         role: The role of the speaker (e.g., 'system', 'user', 'assistant').
         content: The text payload of the message.
     """
+
     role: str
     content: str
 
@@ -64,6 +66,7 @@ class ConversationPayload:
         user: Current user prompt or query.
         history: List of preceding conversation messages.
     """
+
     user: str
     history: List[ConversationMessage] = field(default_factory=list)
 
@@ -78,6 +81,7 @@ class InputValidationResponse:
         execution_time_ms: Total execution duration in milliseconds.
         metadata: Aggregated telemetry metadata.
     """
+
     is_valid: bool
     results: List[ValidationResult]
     execution_time_ms: float = 0.0
@@ -87,4 +91,3 @@ class InputValidationResponse:
     # def success(self) -> bool:
     #     """Backward-compatible alias for is_valid."""
     #     return self.is_valid
-

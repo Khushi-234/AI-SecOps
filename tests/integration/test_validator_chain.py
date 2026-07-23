@@ -42,6 +42,7 @@ from input_validator.validators.context_rules import ContextRulesValidator
 from input_validator.validators.completeness import CompletenessValidator
 from input_validator.validators.base_validator import BaseValidator
 
+
 # --------------------------------------------------------------------------- #
 # Helper – build a fully‑configured pipeline with **all** real validators
 # --------------------------------------------------------------------------- #
@@ -56,12 +57,12 @@ def build_full_pipeline(fail_fast: bool = True) -> ValidationPipeline:
     cfg = InputValidatorConfig()
     validators: List[BaseValidator] = [
         EmptyValidator(config=cfg),
-        LengthValidator(config=cfg),
+        LengthValidator(config=cfg.length),
         EncodingValidator(config=cfg),
         FormatValidator(config=cfg),
-        SchemaValidator(config=cfg),
+        SchemaValidator(config=cfg.schema),
         FileValidator(config=cfg),
-        LanguageValidator(config=cfg),
+        LanguageValidator(config=cfg.language),
         ContextRulesValidator(config=cfg),
         CompletenessValidator(config=cfg),
     ]
@@ -84,6 +85,7 @@ VALID_CONTEXT = {"user": "test_user", "request_id": "req-123"}
 # Test suite – validator chain orchestration
 # --------------------------------------------------------------------------- #
 
+
 class TestChainConstruction:
     """Validate that the pipeline registers validators in priority order."""
 
@@ -104,9 +106,13 @@ class TestExecutionOrder:
         )
         reg = pipeline.get_registered_validators()
         priority_by_name = {v.validator_name: v.priority for v in reg}
-        result_priorities = [priority_by_name[r.validator_name] for r in response.results]
+        result_priorities = [
+            priority_by_name[r.validator_name] for r in response.results
+        ]
         expected_priorities = [v.priority for v in reg]
-        assert result_priorities == expected_priorities, "Result ordering must follow priority"
+        assert (
+            result_priorities == expected_priorities
+        ), "Result ordering must follow priority"
 
 
 class TestRegistration:
@@ -124,7 +130,7 @@ class TestRegistration:
 
             @property
             def priority(self) -> int:
-                return 15  # deliberately after the existing validators
+                return 99  # unused unique priority value
 
             def _validate(self, prompt: str, context: dict[str, Any]):
                 return True, None, None
@@ -132,13 +138,17 @@ class TestRegistration:
         noop = NoOpValidator(config=InputValidatorConfig())
         pipeline.register_validator(noop)
 
-        after_register = {v.validator_name for v in pipeline.get_registered_validators()}
+        after_register = {
+            v.validator_name for v in pipeline.get_registered_validators()
+        }
         assert "NoOpValidator" in after_register
         assert after_register == initial_names.union({"NoOpValidator"})
 
         # Unregister and verify removal
         pipeline.unregister_validator("NoOpValidator")
-        after_unregister = {v.validator_name for v in pipeline.get_registered_validators()}
+        after_unregister = {
+            v.validator_name for v in pipeline.get_registered_validators()
+        }
         assert "NoOpValidator" not in after_unregister
         assert after_unregister == initial_names
 
@@ -169,7 +179,9 @@ class TestDynamicRegistration:
 
         reg_after = pipeline.get_registered_validators()
         priorities = [v.priority for v in reg_after]
-        assert priorities == sorted(priorities), "Dynamic registration must keep sorted order"
+        assert priorities == sorted(
+            priorities
+        ), "Dynamic registration must keep sorted order"
         assert any(v.validator_name == "LateValidator" for v in reg_after)
 
 
@@ -212,7 +224,9 @@ class TestContextPropagation:
         snapshot = copy.deepcopy(mutable_context)
 
         pipeline.validate(VALID_PROMPT, context=mutable_context)
-        assert mutable_context == snapshot, "Pipeline must not alter the original context"
+        assert (
+            mutable_context == snapshot
+        ), "Pipeline must not alter the original context"
 
     def test_context_stays_clean_with_extra_fields(self) -> None:
         pipeline = build_full_pipeline()

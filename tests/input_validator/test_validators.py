@@ -31,7 +31,9 @@ def test_encoding_validator():
     # Surrogate character prompt
     result = validator.validate("Bad \ud800 surrogate", {})
     assert result.is_valid is False
-    assert result.error_message is not None, "Expected an error message when validation fails"
+    assert (
+        result.error_message is not None
+    ), "Expected an error message when validation fails"
     assert "surrogate" in result.error_message.lower()
 
 
@@ -66,8 +68,10 @@ def test_file_validator():
     # Path traversal attack block
     result = validator.validate("Prompt", {"file_path": "../../../etc/passwd"})
     assert result.is_valid is False
-    assert result.error_message is not None, "Expected an error message when validation fails"
-    
+    assert (
+        result.error_message is not None
+    ), "Expected an error message when validation fails"
+
     error_msg = result.error_message.lower()
     assert "path traversal" in error_msg or "restricted" in error_msg
 

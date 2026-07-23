@@ -1,7 +1,7 @@
 """
 Secret Extraction Detector Module
 
-Detects queries attempting to extract sensitive credentials, passwords, 
+Detects queries attempting to extract sensitive credentials, passwords,
 API keys, system environment variables, or private tokens.
 """
 
@@ -12,6 +12,7 @@ from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
 RULE_NAME = "secret"
+
 
 class SecretExtractionDetector(RuleBasedDetector):
     """

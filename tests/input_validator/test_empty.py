@@ -16,7 +16,6 @@ from input_validator.config import InputValidatorConfig
 from input_validator.models import ValidationResult
 from input_validator.validators.empty import EmptyValidator
 
-
 # ===========================================================================
 # 1. TestConstructor
 # ===========================================================================
@@ -146,8 +145,7 @@ class TestValidationFailures:
         assert isinstance(result, ValidationResult)
         assert result.is_valid is False
         assert (
-            result.error_message
-            == "Input prompt is empty or contains only whitespace"
+            result.error_message == "Input prompt is empty or contains only whitespace"
         )
         assert result.validator_name == "EmptyValidator"
 
@@ -187,8 +185,7 @@ class TestEdgeCases:
         # Assert
         assert result.is_valid is False
         assert (
-            result.error_message
-            == "Input prompt is empty or contains only whitespace"
+            result.error_message == "Input prompt is empty or contains only whitespace"
         )
 
     @pytest.mark.parametrize(
@@ -259,8 +256,7 @@ class TestValidationResult:
         assert result.validator_name == "EmptyValidator"
         assert result.is_valid is False
         assert (
-            result.error_message
-            == "Input prompt is empty or contains only whitespace"
+            result.error_message == "Input prompt is empty or contains only whitespace"
         )
         assert isinstance(result.execution_time_ms, float)
         assert result.execution_time_ms >= 0.0

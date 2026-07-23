@@ -28,5 +28,8 @@ class TestSimpleValidator:
         validator = SimpleValidator()
         context = {"api_key": "sec_12345"}
         assert validator.get_context_key(context, "api_key") == "sec_12345"
-        assert validator.get_context_key(context, "missing_key", default="fallback") == "fallback"
+        assert (
+            validator.get_context_key(context, "missing_key", default="fallback")
+            == "fallback"
+        )
         assert validator.get_context_key(None, "api_key", default="fallback") == "fallback"  # type: ignore

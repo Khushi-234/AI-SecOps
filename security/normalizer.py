@@ -15,14 +15,10 @@ SUPPORTED_UNICODE_FORMS = frozenset({"NFC", "NFD", "NFKC", "NFKD"})
 # Zero Width Space (\u200B), Zero Width Non-Joiner (\u200C), Zero Width Joiner (\u200D),
 # Word Joiner (\u2060), Zero Width No-Break Space / BOM (\uFEFF)
 # Directional Overrides (\u202A-\u202E, \u202C)
-INVISIBLE_PATTERN = re.compile(
-    r"[\u200B-\u200D\u2060\uFEFF\u202A-\u202E\u202C]"
-)
+INVISIBLE_PATTERN = re.compile(r"[\u200B-\u200D\u2060\uFEFF\u202A-\u202E\u202C]")
 
 # Non-printable ASCII control characters (excluding tab \t, newline \n, carriage return \r)
-CONTROL_CHAR_PATTERN = re.compile(
-    r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]"
-)
+CONTROL_CHAR_PATTERN = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]")
 
 # Precompiled Whitespace Regular Expressions
 WHITESPACE_PATTERN = re.compile(r"\s+")
@@ -34,6 +30,7 @@ class NormalizationConfig:
     """
     Configuration settings governing text normalization behavior.
     """
+
     unicode_form: str = "NFKC"
     remove_invisible: bool = True
     normalize_whitespace: bool = True
@@ -54,15 +51,15 @@ class TextNormalizer:
 
     Purpose:
     --------
-    Preprocesses prompt strings to ensure they are represented in a clean, canonical 
-    form before being passed to validation detectors. This prevents adversaries 
+    Preprocesses prompt strings to ensure they are represented in a clean, canonical
+    form before being passed to validation detectors. This prevents adversaries
     from using lookalike scripts or hidden spacers to bypass keywords.
 
     Responsibilities:
     -----------------
     - Standardizes Unicode characters using target canonical normalization (e.g. NFKC).
     - Removes invisible zero-width characters and directional overrides.
-      (E.g., Zero Width Space, Zero Width Non-Joiner, Zero Width Joiner, Word Joiner, 
+      (E.g., Zero Width Space, Zero Width Non-Joiner, Zero Width Joiner, Word Joiner,
       and Directional Overrides. Note: This list may expand in Version 2.0).
     - Sanitizes malicious ASCII control characters (e.g., null bytes).
     - Collapses duplicate whitespaces (optionally preserving line breaks).
@@ -76,12 +73,12 @@ class TextNormalizer:
 
     Time Complexity:
     ----------------
-    O(N) linear time, where N is the character length of the prompt. String sweeps and 
+    O(N) linear time, where N is the character length of the prompt. String sweeps and
     regex matches inspect characters linearly.
 
     Space Complexity:
     -----------------
-    O(N) memory, where N is the length of the prompt. Intermediate immutable string copies 
+    O(N) memory, where N is the length of the prompt. Intermediate immutable string copies
     are generated during pipeline transitions.
 
     OWASP Contribution:
@@ -129,7 +126,7 @@ class TextNormalizer:
             raise ValidationError("Input text must be a string instance")
 
         start_time = time.perf_counter()
-        
+
         try:
             current_text = text
             unicode_changes = 0
@@ -142,27 +139,35 @@ class TextNormalizer:
 
             # 2. Invisible Characters Removal
             if self.config.remove_invisible:
-                current_text, invisible_removed = self._remove_invisible_chars(current_text)
+                current_text, invisible_removed = self._remove_invisible_chars(
+                    current_text
+                )
 
             # 3. Control Characters Cleanup
             if self.config.remove_control_chars:
-                current_text, control_removed = self._cleanup_control_chars(current_text)
+                current_text, control_removed = self._cleanup_control_chars(
+                    current_text
+                )
 
             # 4. Whitespace Normalization
             if self.config.normalize_whitespace:
-                current_text, whitespace_removed = self._normalize_whitespace(current_text)
+                current_text, whitespace_removed = self._normalize_whitespace(
+                    current_text
+                )
 
             # Calculate processing time
             elapsed_time_ms = self._calculate_elapsed_ms(start_time)
-            
+
             # Aggregate total character removals
-            characters_removed = max(0, invisible_removed + control_removed + whitespace_removed)
+            characters_removed = max(
+                0, invisible_removed + control_removed + whitespace_removed
+            )
 
             metadata = NormalizationMetadata(
                 characters_removed=characters_removed,
                 unicode_changes=unicode_changes,
                 control_characters_removed=control_removed,
-                processing_time_ms=elapsed_time_ms
+                processing_time_ms=elapsed_time_ms,
             )
 
             return NormalizationResult(normalized_text=current_text, metadata=metadata)
@@ -181,7 +186,7 @@ class TextNormalizer:
     def _normalize_unicode(self, text: str) -> tuple[str, int]:
         """
         Converts lookalike homoglyphs and composed symbols to canonical forms.
-        
+
         Note: The returned change count is an approximate metric indicating character differences.
         """
         try:
@@ -189,7 +194,7 @@ class TextNormalizer:
             normalized = unicodedata.normalize(self.config.unicode_form, text)
         except Exception as e:
             raise NormalizationError(f"Unicode normalization failed: {e}") from e
-        
+
         approximate_unicode_changes = 0
         for c1, c2 in zip(text, normalized):
             if c1 != c2:
@@ -217,21 +222,23 @@ class TextNormalizer:
         """
         if self.config.preserve_newlines:
             # Collapse consecutive horizontal spaces (spaces and tabs)
-            text_collapsed, horizontal_changes = HORIZONTAL_WHITESPACE_PATTERN.subn(" ", text)
-            
+            text_collapsed, horizontal_changes = HORIZONTAL_WHITESPACE_PATTERN.subn(
+                " ", text
+            )
+
             # Trim horizontal padding on each line
             lines = []
             trim_changes = 0
             for line in text_collapsed.splitlines(keepends=True):
                 # Isolate the line endings (\n, \r\n, or \r)
                 stripped = line.rstrip("\r\n")
-                newlines = line[len(stripped):]
-                
+                newlines = line[len(stripped) :]
+
                 # Trim horizontal spaces
                 trimmed_stripped = stripped.strip(" \t")
                 trim_changes += len(line) - (len(trimmed_stripped) + len(newlines))
                 lines.append(trimmed_stripped + newlines)
-                
+
             cleaned = "".join(lines)
             final_cleaned = cleaned.strip(" \t\r\n")
             trim_changes += len(cleaned) - len(final_cleaned)

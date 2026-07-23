@@ -11,7 +11,6 @@ from security.base_detector import DetectorConfig
 from security.rule_based_detector import RuleBasedDetector
 from security.enums import SeverityLevel, ThreatType
 
-
 RULE_NAME = "unicode"
 
 

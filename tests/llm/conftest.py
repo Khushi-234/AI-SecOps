@@ -15,10 +15,10 @@ from security.enums import DetectionStatus, SeverityLevel, ThreatType
 from security.models import DetectionResult, NormalizationMetadata, NormalizationResult
 from security.normalizer import TextNormalizer
 
-
 # ===========================================================================
 # Reusable Test Double Classes
 # ===========================================================================
+
 
 class FakeAuditLogger(AuditLogger):
     """Fake logger recording invocation call details."""
@@ -27,14 +27,14 @@ class FakeAuditLogger(AuditLogger):
         self.log_calls = []
         self.should_fail = should_fail
 
-    def log_event(self, event_type: str, request_id: str, details: dict[str, Any]) -> None:
+    def log_event(
+        self, event_type: str, request_id: str, details: dict[str, Any]
+    ) -> None:
         if self.should_fail:
             raise RuntimeError("Database connection down")
-        self.log_calls.append({
-            "event_type": event_type,
-            "request_id": request_id,
-            "details": details
-        })
+        self.log_calls.append(
+            {"event_type": event_type, "request_id": request_id, "details": details}
+        )
 
 
 class FakeDetector(BaseDetector):
@@ -56,14 +56,16 @@ class FakeDetector(BaseDetector):
         self,
         name: str = "FakeDetector",
         should_raise: Exception | None = None,
-        return_result: DetectionResult | None = None
+        return_result: DetectionResult | None = None,
     ) -> None:
         self._name = name
         self.should_raise = should_raise
         self.return_result = return_result
         self.calls = []
 
-    def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
+    def detect(
+        self, prompt: str, context: dict[str, Any] | None = None
+    ) -> DetectionResult:
         self.calls.append((prompt, context))
         if self.should_raise:
             raise self.should_raise
@@ -79,14 +81,16 @@ class FakeDetector(BaseDetector):
             evidence="Clean",
             execution_time_ms=0.5,
             status=DetectionStatus.SUCCESS,
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
 
 class FakeTextNormalizer(TextNormalizer):
     """Fake normalizer returning configurable cleaned text or errors."""
 
-    def __init__(self, should_raise: Exception | None = None, return_text: str | None = None) -> None:
+    def __init__(
+        self, should_raise: Exception | None = None, return_text: str | None = None
+    ) -> None:
         self.should_raise = should_raise
         self.return_text = return_text
         self.calls = []
@@ -100,7 +104,7 @@ class FakeTextNormalizer(TextNormalizer):
             characters_removed=0,
             unicode_changes=0,
             control_characters_removed=0,
-            processing_time_ms=0.1
+            processing_time_ms=0.1,
         )
         return NormalizationResult(normalized_text=norm_text, metadata=metadata)
 
@@ -108,6 +112,7 @@ class FakeTextNormalizer(TextNormalizer):
 # ===========================================================================
 # Reusable Pytest Fixtures
 # ===========================================================================
+
 
 @pytest.fixture
 def fake_logger() -> FakeAuditLogger:

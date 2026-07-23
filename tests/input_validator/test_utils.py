@@ -24,8 +24,8 @@ class TestUtils:
             "user": "What is AI?",
             "history": [
                 {"role": "user", "content": "Hello"},
-                {"role": "assistant", "content": "Hi!"}
-            ]
+                {"role": "assistant", "content": "Hi!"},
+            ],
         }
         payload = parse_raw_payload(raw_dict)
         assert isinstance(payload, ConversationPayload)
@@ -50,7 +50,7 @@ class TestUtils:
     def test_parse_raw_payload_malformed_history_item(self) -> None:
         raw_dict = {
             "user": "Test prompt",
-            "history": ["string_history_item", {"role": "system", "content": "Init"}]
+            "history": ["string_history_item", {"role": "system", "content": "Init"}],
         }
         payload = parse_raw_payload(raw_dict)
         assert payload is not None
@@ -82,7 +82,10 @@ class TestUtils:
     def test_truncate_text(self) -> None:
         assert truncate_text("") == ""
         assert truncate_text("Short text", max_length=20) == "Short text"
-        assert truncate_text("Long text that needs truncation", max_length=10) == "Long text ..."
+        assert (
+            truncate_text("Long text that needs truncation", max_length=10)
+            == "Long text ..."
+        )
         assert truncate_text("Long text", max_length=4, suffix="--") == "Long--"
 
     def test_is_empty(self) -> None:

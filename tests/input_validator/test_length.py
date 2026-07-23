@@ -16,7 +16,6 @@ from input_validator.config import LengthConfig
 from input_validator.models import ValidationResult
 from input_validator.validators.length import LengthValidator
 
-
 # ===========================================================================
 # 1. TestConstructor
 # ===========================================================================
@@ -187,9 +186,14 @@ class TestBoundaryConditions:
         if not expected_valid:
             assert result.error_message is not None
             if char_count < min_len:
-                assert f"below the configured minimum of {min_len}" in result.error_message
+                assert (
+                    f"below the configured minimum of {min_len}" in result.error_message
+                )
             elif char_count > max_len:
-                assert f"exceeds the configured maximum of {max_len}" in result.error_message
+                assert (
+                    f"exceeds the configured maximum of {max_len}"
+                    in result.error_message
+                )
         else:
             assert result.error_message is None
 

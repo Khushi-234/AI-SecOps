@@ -387,7 +387,10 @@ class TestStringMethods:
         err = EncodingValidationError("Invalid UTF-8", details={"encoding": "ascii"})
 
         # Act & Assert
-        assert str(err) == "[ENCODING_ERROR] Invalid UTF-8 (Details: {'encoding': 'ascii'})"
+        assert (
+            str(err)
+            == "[ENCODING_ERROR] Invalid UTF-8 (Details: {'encoding': 'ascii'})"
+        )
 
     def test_str_with_cause(self) -> None:
         # Arrange
@@ -395,10 +398,7 @@ class TestStringMethods:
         err = FileValidationError("File corrupt", cause=cause)
 
         # Act & Assert
-        assert (
-            str(err)
-            == "[FILE_ERROR] File corrupt | Cause: ValueError(Bad bytes)"
-        )
+        assert str(err) == "[FILE_ERROR] File corrupt | Cause: ValueError(Bad bytes)"
 
     def test_str_with_details_and_cause(self) -> None:
         # Arrange

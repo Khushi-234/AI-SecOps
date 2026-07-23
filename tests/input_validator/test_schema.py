@@ -17,7 +17,6 @@ from input_validator.config import SchemaConfig
 from input_validator.models import ValidationResult
 from input_validator.validators.schema import SchemaValidator
 
-
 # ===========================================================================
 # 1. TestConstructor
 # ===========================================================================
@@ -150,9 +149,8 @@ class TestJsonParsing:
 
         # Assert
         assert result.is_valid is False
-        assert (
-            "JSON payload must be a dictionary/structured object"
-            in (result.error_message or "")
+        assert "JSON payload must be a dictionary/structured object" in (
+            result.error_message or ""
         )
         assert result.metadata["validation_passed"] is False
 

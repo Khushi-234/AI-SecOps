@@ -8,8 +8,13 @@ import yaml
 
 from security.base_detector import BaseDetector, DetectorConfig
 from security.enums import DetectionStatus, SeverityLevel, ThreatType
-from security.exceptions import ConfigurationError, DetectorExecutionError, RuleLoadingError
+from security.exceptions import (
+    ConfigurationError,
+    DetectorExecutionError,
+    RuleLoadingError,
+)
 from security.models import DetectionResult
+
 
 class RuleBasedDetector(BaseDetector):
     """
@@ -32,20 +37,28 @@ class RuleBasedDetector(BaseDetector):
         """
         pass
 
-    def __init__(self, default_rule_name: str, config: DetectorConfig | None = None) -> None:
+    def __init__(
+        self, default_rule_name: str, config: DetectorConfig | None = None
+    ) -> None:
         """
         Initializes the detector, locating and loading the rule configuration.
         """
         super().__init__(config)
 
-        rule_path_str = self.config.rule_file or f"security/rules/{default_rule_name}.yaml"
+        rule_path_str = (
+            self.config.rule_file or f"security/rules/{default_rule_name}.yaml"
+        )
         rule_path = Path(rule_path_str)
         if not rule_path.exists():
             rule_path = Path(__file__).parent / "rules" / f"{default_rule_name}.yaml"
 
-        self._compiled_rules: list[dict[str, Any]] = self._load_and_compile_rules(rule_path)
+        self._compiled_rules: list[dict[str, Any]] = self._load_and_compile_rules(
+            rule_path
+        )
 
-    def detect(self, prompt: str, context: dict[str, Any] | None = None) -> DetectionResult:
+    def detect(
+        self, prompt: str, context: dict[str, Any] | None = None
+    ) -> DetectionResult:
         """
         Scans normalized prompt text against compiled YAML rule definitions.
         """
@@ -64,7 +77,7 @@ class RuleBasedDetector(BaseDetector):
                 execution_time_ms=0.0,
                 status=DetectionStatus.SKIPPED,
                 timestamp=RuleBasedDetector._current_timestamp(),
-                metadata={}
+                metadata={},
             )
 
         try:
@@ -103,30 +116,38 @@ class RuleBasedDetector(BaseDetector):
                         matched_pattern = ph_pat
 
                 if match_count > 0:
-                    matches.append({
-                        "rule_id": rule["rule_id"],
-                        "rule_name": rule["rule_name"],
-                        "threat_type": rule["threat_type"],
-                        "severity": rule["severity"],
-                        "confidence": rule["confidence"],
-                        "matched_text": matched_text,
-                        "matched_pattern": matched_pattern,
-                        "match_count": match_count,
-                        "category": rule["category"],
-                        "priority": rule["priority"],
-                        "tags": list(rule["tags"]),
-                        "recommendation": rule["recommendation"],
-                        "description": rule["description"]
-                    })
+                    matches.append(
+                        {
+                            "rule_id": rule["rule_id"],
+                            "rule_name": rule["rule_name"],
+                            "threat_type": rule["threat_type"],
+                            "severity": rule["severity"],
+                            "confidence": rule["confidence"],
+                            "matched_text": matched_text,
+                            "matched_pattern": matched_pattern,
+                            "match_count": match_count,
+                            "category": rule["category"],
+                            "priority": rule["priority"],
+                            "tags": list(rule["tags"]),
+                            "recommendation": rule["recommendation"],
+                            "description": rule["description"],
+                        }
+                    )
 
             elapsed_time_ms = self._calculate_elapsed_ms(start_time)
-            winning_match = min(matches, key=lambda x: x["priority"]) if matches else None
-            return self._build_detection_result(winning_match, request_id, elapsed_time_ms)
+            winning_match = (
+                min(matches, key=lambda x: x["priority"]) if matches else None
+            )
+            return self._build_detection_result(
+                winning_match, request_id, elapsed_time_ms
+            )
 
         except (RuleLoadingError, ConfigurationError):
             raise
         except Exception as e:
-            raise DetectorExecutionError(f"Unexpected runtime failure in detector: {e}") from e
+            raise DetectorExecutionError(
+                f"Unexpected runtime failure in detector: {e}"
+            ) from e
 
     def _regex_match(self, prompt: str, rule: dict[str, Any]) -> tuple[str, str, int]:
         """
@@ -143,7 +164,9 @@ class RuleBasedDetector(BaseDetector):
                     matched_pattern = pattern.pattern
         return matched_text, matched_pattern, match_count
 
-    def _keyword_match(self, prompt: str, rule: dict[str, Any], words: list[str]) -> tuple[str, str, int]:
+    def _keyword_match(
+        self, prompt: str, rule: dict[str, Any], words: list[str]
+    ) -> tuple[str, str, int]:
         """
         Executes keyword token matching for a given rule.
         """
@@ -197,19 +220,32 @@ class RuleBasedDetector(BaseDetector):
             with rule_path.open("r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except Exception as e:
-            raise RuleLoadingError(f"Failed to read/parse rule YAML database: {e}") from e
+            raise RuleLoadingError(
+                f"Failed to read/parse rule YAML database: {e}"
+            ) from e
 
         if not data or "rules" not in data or not isinstance(data["rules"], list):
-            raise ConfigurationError("YAML schema error: Missing top-level 'rules' list definition.")
+            raise ConfigurationError(
+                "YAML schema error: Missing top-level 'rules' list definition."
+            )
 
         compiled_rules: list[dict[str, Any]] = []
 
         for index, rule_def in enumerate(data["rules"]):
             # Validate schema constraints
             required_keys = {
-                "rule_id", "rule_name", "description", "enabled", "threat_type",
-                "severity", "confidence", "category", "priority", "tags",
-                "recommendation", "patterns"
+                "rule_id",
+                "rule_name",
+                "description",
+                "enabled",
+                "threat_type",
+                "severity",
+                "confidence",
+                "category",
+                "priority",
+                "tags",
+                "recommendation",
+                "patterns",
             }
             missing_keys = required_keys - rule_def.keys()
             if missing_keys:
@@ -284,7 +320,7 @@ class RuleBasedDetector(BaseDetector):
                 "recommendation": rule_def["recommendation"],
                 "compiled_patterns": compiled_patterns,
                 "keywords": rule_def.get("keywords", []),
-                "phrases": rule_def.get("phrases", [])
+                "phrases": rule_def.get("phrases", []),
             }
             compiled_rules.append(rule_entry)
 
@@ -294,7 +330,7 @@ class RuleBasedDetector(BaseDetector):
         self,
         winning_match: dict[str, Any] | None,
         request_id: str,
-        elapsed_time_ms: float
+        elapsed_time_ms: float,
     ) -> DetectionResult:
         if winning_match is None:
             return DetectionResult(
@@ -308,7 +344,7 @@ class RuleBasedDetector(BaseDetector):
                 execution_time_ms=elapsed_time_ms,
                 status=DetectionStatus.SUCCESS,
                 timestamp=RuleBasedDetector._current_timestamp(),
-                metadata={}
+                metadata={},
             )
 
         try:
@@ -329,7 +365,7 @@ class RuleBasedDetector(BaseDetector):
             "category": winning_match["category"],
             "priority": winning_match["priority"],
             "tags": winning_match["tags"],
-            "recommendation": winning_match["recommendation"]
+            "recommendation": winning_match["recommendation"],
         }
 
         evidence = (
@@ -348,5 +384,5 @@ class RuleBasedDetector(BaseDetector):
             execution_time_ms=elapsed_time_ms,
             status=DetectionStatus.SUCCESS,
             timestamp=RuleBasedDetector._current_timestamp(),
-            metadata=meta
+            metadata=meta,
         )

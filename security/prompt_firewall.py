@@ -7,9 +7,15 @@ from typing import Any
 from security.audit_logger import AuditLogger
 from security.base_detector import BaseDetector
 from security.enums import DetectionStatus, SeverityLevel, ThreatType
-from security.exceptions import DetectorExecutionError, FirewallError, NormalizationError, ValidationError
+from security.exceptions import (
+    DetectorExecutionError,
+    FirewallError,
+    NormalizationError,
+    ValidationError,
+)
 from security.models import DetectionResult, FirewallResponse
 from security.normalizer import TextNormalizer
+
 
 class PromptFirewall:
     """
@@ -17,8 +23,8 @@ class PromptFirewall:
 
     Purpose:
     --------
-    Acts as the entry point for prompt validation. It normalizes inputs, executes 
-    a suite of registered security detectors, aggregates findings, and logs 
+    Acts as the entry point for prompt validation. It normalizes inputs, executes
+    a suite of registered security detectors, aggregates findings, and logs
     telemetry without executing threat evaluation or request blocking themselves.
 
     Pipeline Steps:
@@ -48,20 +54,20 @@ class PromptFirewall:
 
     Dependency Inversion Principle (SOLID):
     ---------------------------------------
-    PromptFirewall depends entirely on abstract base classes (BaseDetector, AuditLogger) 
-    rather than concrete implementations. This decouples orchestration from specific 
-    scanning rules or storage drivers, allowing other teams to register new detectors 
+    PromptFirewall depends entirely on abstract base classes (BaseDetector, AuditLogger)
+    rather than concrete implementations. This decouples orchestration from specific
+    scanning rules or storage drivers, allowing other teams to register new detectors
     or loggers dynamically.
 
     OWASP Alignment:
     ----------------
-    Serves as the framework's primary gateway defense layer, ensuring that incoming prompts 
-    are preprocessed and validated against OWASP LLM01 (Prompt Injection) threat patterns 
+    Serves as the framework's primary gateway defense layer, ensuring that incoming prompts
+    are preprocessed and validated against OWASP LLM01 (Prompt Injection) threat patterns
     prior to model execution.
 
     Time Complexity:
     ----------------
-    O(M * N) linear time, where M is the number of active pipeline detectors and N is 
+    O(M * N) linear time, where M is the number of active pipeline detectors and N is
     the character size of the prompt.
 
     Space Complexity:
@@ -70,10 +76,10 @@ class PromptFirewall:
 
     Future Integrations:
     --------------------
-    - Risk Engine (Sprint 7): Consumes the flat list of DetectionResult objects inside 
+    - Risk Engine (Sprint 7): Consumes the flat list of DetectionResult objects inside
       FirewallResponse to compute a unified framework risk index.
       (e.g., RiskEngine.evaluate_risk(firewall_response.results)).
-    - Policy Engine (Sprint 8): Evaluates the compiled scan metrics against compliance 
+    - Policy Engine (Sprint 8): Evaluates the compiled scan metrics against compliance
       policies to make final routing, filtering, or request-blocking decisions.
       (e.g., PolicyEngine.enforce_policy(firewall_response)).
     - Output Guard (Sprint 9): Executes post-generation guardrails on LLM completions.
@@ -84,13 +90,13 @@ class PromptFirewall:
         detectors: list[BaseDetector],
         audit_logger: AuditLogger,
         normalizer: TextNormalizer,
-        fail_secure: bool = True
+        fail_secure: bool = True,
     ) -> None:
         """
         Initializes the PromptFirewall.
 
         Args:
-            detectors: Sequential pipeline of detectors implementing BaseDetector. 
+            detectors: Sequential pipeline of detectors implementing BaseDetector.
             audit_logger: A logging interface implementing AuditLogger.
             normalizer: A text normalizer class instance.
             fail_secure: If True, detector runtime errors default to security violations.
@@ -100,7 +106,9 @@ class PromptFirewall:
         self._normalizer = normalizer
         self._fail_secure = fail_secure
 
-    def inspect_prompt(self, prompt: str, context: dict[str, Any] | None = None) -> FirewallResponse:
+    def inspect_prompt(
+        self, prompt: str, context: dict[str, Any] | None = None
+    ) -> FirewallResponse:
         """
         Inspects a prompt string by executing the full validation pipeline.
 
@@ -145,15 +153,21 @@ class PromptFirewall:
             except DetectorExecutionError as dee:
                 if self._fail_secure:
                     detector_elapsed = (time.perf_counter() - detector_start) * 1000.0
-                    error_result = self._build_error_result(detector, request_id, detector_elapsed, dee)
+                    error_result = self._build_error_result(
+                        detector, request_id, detector_elapsed, dee
+                    )
                     results.append(error_result)
                 else:
                     raise
             except Exception as e:
-                wrapped_error = DetectorExecutionError(f"Unexpected detector execution crash: {e}")
+                wrapped_error = DetectorExecutionError(
+                    f"Unexpected detector execution crash: {e}"
+                )
                 if self._fail_secure:
                     detector_elapsed = (time.perf_counter() - detector_start) * 1000.0
-                    error_result = self._build_error_result(detector, request_id, detector_elapsed, e)
+                    error_result = self._build_error_result(
+                        detector, request_id, detector_elapsed, e
+                    )
                     results.append(error_result)
                 else:
                     raise wrapped_error from e
@@ -166,7 +180,7 @@ class PromptFirewall:
             request_id=request_id,
             normalized_prompt=normalized_prompt,
             results=results,
-            execution_time_ms=total_time_ms
+            execution_time_ms=total_time_ms,
         )
 
         # Call log_event exactly once (safeguarded to prevent logging failures from blocking responses)
@@ -176,7 +190,7 @@ class PromptFirewall:
             "execution_time_ms": total_time_ms,
             "detector_count": len(self._detectors),
             "results": [r.to_dict() for r in results],
-            "normalization_metadata": norm_metadata.to_dict()
+            "normalization_metadata": norm_metadata.to_dict(),
         }
 
         try:
@@ -193,7 +207,7 @@ class PromptFirewall:
         detector: BaseDetector,
         request_id: str,
         elapsed_time_ms: float,
-        error: Exception
+        error: Exception,
     ) -> DetectionResult:
         """
         Constructs a standard ERROR-flagged DetectionResult representing a detector execution failure.
@@ -209,5 +223,5 @@ class PromptFirewall:
             execution_time_ms=elapsed_time_ms,
             status=DetectionStatus.ERROR,
             timestamp=datetime.now(timezone.utc),
-            metadata={"error_type": error.__class__.__name__, "message": str(error)}
+            metadata={"error_type": error.__class__.__name__, "message": str(error)},
         )

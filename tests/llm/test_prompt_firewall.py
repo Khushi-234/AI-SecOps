@@ -15,11 +15,15 @@ import pytest
 from security.audit_logger import AuditLogger
 from security.base_detector import BaseDetector
 from security.enums import DetectionStatus, SeverityLevel, ThreatType
-from security.exceptions import DetectorExecutionError, FirewallError, NormalizationError, ValidationError
+from security.exceptions import (
+    DetectorExecutionError,
+    FirewallError,
+    NormalizationError,
+    ValidationError,
+)
 from security.models import DetectionResult, NormalizationMetadata, NormalizationResult
 from security.normalizer import TextNormalizer
 from security.prompt_firewall import PromptFirewall
-
 
 # ===========================================================================
 # 14. Reusable Fake Implementations
@@ -45,7 +49,7 @@ def threat_detector() -> FakeDetector:
         evidence="Matched bypass",
         execution_time_ms=1.2,
         status=DetectionStatus.SUCCESS,
-        timestamp=datetime.now(timezone.utc)
+        timestamp=datetime.now(timezone.utc),
     )
     return FakeDetector(name="ThreatDetector", return_result=mock_res)
 
@@ -54,14 +58,19 @@ def threat_detector() -> FakeDetector:
 # 1. Firewall Initialization
 # ===========================================================================
 
-def test_firewall_initialization_various_detectors(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_firewall_initialization_various_detectors(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies that firewall configures single, multiple, or empty lists of detectors."""
     # 1. Single detector
     fw_single = PromptFirewall([FakeDetector("D1")], fake_logger, fake_normalizer)
     assert len(fw_single._detectors) == 1
 
     # 2. Multiple detectors
-    fw_multi = PromptFirewall([FakeDetector("D1"), FakeDetector("D2")], fake_logger, fake_normalizer)
+    fw_multi = PromptFirewall(
+        [FakeDetector("D1"), FakeDetector("D2")], fake_logger, fake_normalizer
+    )
     assert len(fw_multi._detectors) == 2
 
     # 3. Empty detector list
@@ -69,7 +78,9 @@ def test_firewall_initialization_various_detectors(fake_logger: FakeAuditLogger,
     assert len(fw_empty._detectors) == 0
 
 
-def test_firewall_initialization_fail_secure(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+def test_firewall_initialization_fail_secure(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies fail_secure setting parameter assignment."""
     # 1. fail_secure=True
     fw_true = PromptFirewall([], fake_logger, fake_normalizer, fail_secure=True)
@@ -84,6 +95,7 @@ def test_firewall_initialization_fail_secure(fake_logger: FakeAuditLogger, fake_
 # 2. Input Validation
 # ===========================================================================
 
+
 @pytest.mark.parametrize(
     "invalid_prompt, expected_err",
     [
@@ -93,7 +105,10 @@ def test_firewall_initialization_fail_secure(fake_logger: FakeAuditLogger, fake_
     ],
 )
 def test_input_validation_raises(
-    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer, invalid_prompt: Any, expected_err: type
+    fake_logger: FakeAuditLogger,
+    fake_normalizer: FakeTextNormalizer,
+    invalid_prompt: Any,
+    expected_err: type,
 ) -> None:
     """Verifies that non-string and None prompts raise ValidationError immediately."""
     # Arrange
@@ -123,6 +138,7 @@ def test_input_validation_accepts_valid_prompt_strings(
 # 3. Prompt Normalization
 # ===========================================================================
 
+
 def test_prompt_normalization_pipeline(fake_logger: FakeAuditLogger) -> None:
     """Verifies that normalizer is called once, clean text forwarded, and metadata logged."""
     # Arrange
@@ -141,7 +157,9 @@ def test_prompt_normalization_pipeline(fake_logger: FakeAuditLogger) -> None:
     assert "normalization_metadata" in fake_logger.log_calls[0]["details"]
 
 
-def test_normalizer_unexpected_exception_raises_firewall_error(fake_logger: FakeAuditLogger) -> None:
+def test_normalizer_unexpected_exception_raises_firewall_error(
+    fake_logger: FakeAuditLogger,
+) -> None:
     """Verifies that unexpected errors from normalizer are wrapped inside FirewallError."""
     # Arrange
     normalizer = FakeTextNormalizer(should_raise=RuntimeError("Out of memory"))
@@ -157,7 +175,10 @@ def test_normalizer_unexpected_exception_raises_firewall_error(fake_logger: Fake
 # 4 & 11. Detector Execution & Ordering
 # ===========================================================================
 
-def test_detector_execution_ordering_and_forwarding(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_detector_execution_ordering_and_forwarding(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies detectors receive inputs in registration order with context."""
     # Arrange
     det1 = FakeDetector("D1")
@@ -182,11 +203,16 @@ def test_detector_execution_ordering_and_forwarding(fake_logger: FakeAuditLogger
 # 5 & 13. Detector Failure & Error Result Builder
 # ===========================================================================
 
-def test_detector_failure_fail_secure_true(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_detector_failure_fail_secure_true(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies that fail_secure=True catches detector crashes and yields ERROR results."""
     # Arrange
     det_crash = FakeDetector("CrashDetector", should_raise=RuntimeError("API timeout"))
-    firewall = PromptFirewall([det_crash], fake_logger, fake_normalizer, fail_secure=True)
+    firewall = PromptFirewall(
+        [det_crash], fake_logger, fake_normalizer, fail_secure=True
+    )
 
     # Act
     res = firewall.inspect_prompt("trigger", context={"request_id": "req-000"})
@@ -203,11 +229,17 @@ def test_detector_failure_fail_secure_true(fake_logger: FakeAuditLogger, fake_no
     assert "Detector error occurred during execution" in err_res.evidence
 
 
-def test_detector_failure_fail_secure_false_re_raises(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+def test_detector_failure_fail_secure_false_re_raises(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies that fail_secure=False propagates detector exceptions directly."""
     # Arrange
-    det_crash = FakeDetector("CrashDetector", should_raise=DetectorExecutionError("Custom error"))
-    firewall = PromptFirewall([det_crash], fake_logger, fake_normalizer, fail_secure=False)
+    det_crash = FakeDetector(
+        "CrashDetector", should_raise=DetectorExecutionError("Custom error")
+    )
+    firewall = PromptFirewall(
+        [det_crash], fake_logger, fake_normalizer, fail_secure=False
+    )
 
     # Act & Assert
     with pytest.raises(DetectorExecutionError) as exc_info:
@@ -220,9 +252,13 @@ def test_detector_failure_unexpected_error_fail_secure_false_raises_wrapped(
 ) -> None:
     """Verifies unexpected errors under fail_secure=False are wrapped into DetectorExecutionError."""
     # Arrange
-    det_crash = FakeDetector("CrashDetector", should_raise=ValueError("Unexpected crash"))
-    firewall = PromptFirewall([det_crash], fake_logger, fake_normalizer, fail_secure=False)
-  
+    det_crash = FakeDetector(
+        "CrashDetector", should_raise=ValueError("Unexpected crash")
+    )
+    firewall = PromptFirewall(
+        [det_crash], fake_logger, fake_normalizer, fail_secure=False
+    )
+
     # Act & Assert
     with pytest.raises(DetectorExecutionError) as exc_info:
         firewall.inspect_prompt("trigger")
@@ -233,7 +269,10 @@ def test_detector_failure_unexpected_error_fail_secure_false_raises_wrapped(
 # 6. FirewallResponse Verification
 # ===========================================================================
 
-def test_firewall_response_structure(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_firewall_response_structure(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies structural fields in FirewallResponse match expectations."""
     # Arrange
     firewall = PromptFirewall([], fake_logger, fake_normalizer)
@@ -252,7 +291,10 @@ def test_firewall_response_structure(fake_logger: FakeAuditLogger, fake_normaliz
 # 7. Audit Logger Verification
 # ===========================================================================
 
-def test_audit_logger_invocation_and_details(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_audit_logger_invocation_and_details(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies audit log is sent exactly once with required fields."""
     # Arrange
     det = FakeDetector("D")
@@ -280,7 +322,10 @@ def test_audit_logger_invocation_and_details(fake_logger: FakeAuditLogger, fake_
 # 8. Audit Logger Failure
 # ===========================================================================
 
-def test_audit_logger_failure_does_not_break_firewall(fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_audit_logger_failure_does_not_break_firewall(
+    fake_normalizer: FakeTextNormalizer,
+) -> None:
     """Verifies database/logger driver failure does not raise errors to the client."""
     # Arrange
     failing_logger = FakeAuditLogger(should_fail=True)
@@ -296,7 +341,10 @@ def test_audit_logger_failure_does_not_break_firewall(fake_normalizer: FakeTextN
 # 9. Execution Timing
 # ===========================================================================
 
-def test_execution_time_non_negative(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_execution_time_non_negative(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies that firewall timing tracking measures a positive float."""
     # Arrange
     firewall = PromptFirewall([], fake_logger, fake_normalizer)
@@ -312,7 +360,10 @@ def test_execution_time_non_negative(fake_logger: FakeAuditLogger, fake_normaliz
 # 10. Context Handling Tests
 # ===========================================================================
 
-def test_context_handling_scenarios(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_context_handling_scenarios(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies context is passed correctly and request_id fallback triggers."""
     firewall = PromptFirewall([], fake_logger, fake_normalizer)
 
@@ -325,7 +376,9 @@ def test_context_handling_scenarios(fake_logger: FakeAuditLogger, fake_normalize
     assert res_req.request_id == "req-user"
 
     # 3. context with custom metadata
-    res_custom = firewall.inspect_prompt("test", context={"request_id": "req-user", "session_id": "sess-xyz"})
+    res_custom = firewall.inspect_prompt(
+        "test", context={"request_id": "req-user", "session_id": "sess-xyz"}
+    )
     assert res_custom.request_id == "req-user"
 
 
@@ -333,20 +386,35 @@ def test_context_handling_scenarios(fake_logger: FakeAuditLogger, fake_normalize
 # 12. Multiple Detection Results
 # ===========================================================================
 
-def test_multiple_detection_results_aggregation(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_multiple_detection_results_aggregation(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies results from all registered detectors are aggregated in the response."""
     # Arrange
     r1 = DetectionResult(
-        request_id="req-1", detector_name="D1", threat_type=ThreatType.NONE,
-        severity=SeverityLevel.INFORMATIONAL, confidence=0.0, matched_text="",
-        evidence="Clean", execution_time_ms=0.5, status=DetectionStatus.SUCCESS,
-        timestamp=datetime.now(timezone.utc)
+        request_id="req-1",
+        detector_name="D1",
+        threat_type=ThreatType.NONE,
+        severity=SeverityLevel.INFORMATIONAL,
+        confidence=0.0,
+        matched_text="",
+        evidence="Clean",
+        execution_time_ms=0.5,
+        status=DetectionStatus.SUCCESS,
+        timestamp=datetime.now(timezone.utc),
     )
     r2 = DetectionResult(
-        request_id="req-1", detector_name="D2", threat_type=ThreatType.PROMPT_INJECTION,
-        severity=SeverityLevel.HIGH, confidence=0.8, matched_text="dan",
-        evidence="Dan match", execution_time_ms=0.6, status=DetectionStatus.SUCCESS,
-        timestamp=datetime.now(timezone.utc)
+        request_id="req-1",
+        detector_name="D2",
+        threat_type=ThreatType.PROMPT_INJECTION,
+        severity=SeverityLevel.HIGH,
+        confidence=0.8,
+        matched_text="dan",
+        evidence="Dan match",
+        execution_time_ms=0.6,
+        status=DetectionStatus.SUCCESS,
+        timestamp=datetime.now(timezone.utc),
     )
     det1 = FakeDetector("D1", return_result=r1)
     det2 = FakeDetector("D2", return_result=r2)
@@ -366,11 +434,16 @@ def test_multiple_detection_results_aggregation(fake_logger: FakeAuditLogger, fa
 # 15. Regression Tests
 # ===========================================================================
 
-def test_future_detector_additions_compatibility(fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer) -> None:
+
+def test_future_detector_additions_compatibility(
+    fake_logger: FakeAuditLogger, fake_normalizer: FakeTextNormalizer
+) -> None:
     """Verifies that firewall behaves consistently regardless of the number of registered detectors."""
     # Arrange
     # Simulates registration of many dynamic detectors
-    detectors : list[BaseDetector] = [FakeDetector(f"DynamicDetector-{i}") for i in range(10)]
+    detectors: list[BaseDetector] = [
+        FakeDetector(f"DynamicDetector-{i}") for i in range(10)
+    ]
     firewall = PromptFirewall(detectors, fake_logger, fake_normalizer)
 
     # Act

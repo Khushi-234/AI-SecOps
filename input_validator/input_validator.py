@@ -36,7 +36,6 @@ from input_validator.models import InputValidationResponse
 from input_validator.pipeline import ValidationPipeline
 from input_validator.validators.base_validator import BaseValidator
 
-
 FRAMEWORK_VERSION = "1.0.0"
 
 

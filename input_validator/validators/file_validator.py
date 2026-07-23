@@ -21,8 +21,26 @@ from input_validator.validators.base_validator import BaseValidator
 from input_validator.utils import extract_file_extension, is_empty
 
 FILE_PATH_KEYS = {"file_path", "filepath", "file", "document", "attachment"}
-DEFAULT_ALLOWED_EXTENSIONS = {"txt", "json", "csv", "pdf", "md", "png", "jpg", "yaml", "yml"}
-RESTRICTED_DIRECTORY_PREFIXES = ("/etc", "/proc", "/sys", "/dev", "/root", "/boot", "/var/log")
+DEFAULT_ALLOWED_EXTENSIONS = {
+    "txt",
+    "json",
+    "csv",
+    "pdf",
+    "md",
+    "png",
+    "jpg",
+    "yaml",
+    "yml",
+}
+RESTRICTED_DIRECTORY_PREFIXES = (
+    "/etc",
+    "/proc",
+    "/sys",
+    "/dev",
+    "/root",
+    "/boot",
+    "/var/log",
+)
 
 
 class FileValidator(BaseValidator):
@@ -46,7 +64,11 @@ class FileValidator(BaseValidator):
         problematic: list[str] = []
         violations: list[str] = []
 
-        allowed_exts = getattr(self.config, "allowed_extensions", DEFAULT_ALLOWED_EXTENSIONS) if self.config else DEFAULT_ALLOWED_EXTENSIONS
+        allowed_exts = (
+            getattr(self.config, "allowed_extensions", DEFAULT_ALLOWED_EXTENSIONS)
+            if self.config
+            else DEFAULT_ALLOWED_EXTENSIONS
+        )
         allowed_exts = {ext.lower() for ext in allowed_exts}
 
         for key in FILE_PATH_KEYS:
@@ -75,9 +97,14 @@ class FileValidator(BaseValidator):
             # 3. Restricted directory resolution check
             try:
                 resolved_path = str(Path(raw_path).resolve())
-                if any(resolved_path.startswith(prefix) for prefix in RESTRICTED_DIRECTORY_PREFIXES):
+                if any(
+                    resolved_path.startswith(prefix)
+                    for prefix in RESTRICTED_DIRECTORY_PREFIXES
+                ):
                     problematic.append(key)
-                    violations.append(f"{key}: access to restricted system location denied")
+                    violations.append(
+                        f"{key}: access to restricted system location denied"
+                    )
                     continue
             except Exception:
                 problematic.append(key)

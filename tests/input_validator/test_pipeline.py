@@ -25,7 +25,6 @@ from input_validator.models import InputValidationResponse, ValidationResult
 from input_validator.pipeline import ValidationPipeline
 from input_validator.validators.base_validator import BaseValidator
 
-
 # ===========================================================================
 # Lightweight Mock Validators (Isolated for Testing)
 # ===========================================================================
@@ -131,9 +130,7 @@ class ValidationErrorValidator(BaseValidator):
 class TrackingValidator(BaseValidator):
     """Mock validator that logs its execution to a tracking list."""
 
-    def __init__(
-        self, priority: int, name: str, execution_log: list[str]
-    ) -> None:
+    def __init__(self, priority: int, name: str, execution_log: list[str]) -> None:
         super().__init__(config=DummyConfig(enabled=True))
         self._priority = priority
         self._name = name
@@ -183,9 +180,7 @@ class ContextTrackingValidator(BaseValidator):
 class DisabledMockValidator(BaseValidator):
     """Mock validator configured with enabled=False."""
 
-    def __init__(
-        self, priority: int = 40, name: str = "DisabledMockValidator"
-    ) -> None:
+    def __init__(self, priority: int = 40, name: str = "DisabledMockValidator") -> None:
         super().__init__(config=DummyConfig(enabled=False))
         self._priority = priority
         self._name = name
@@ -369,9 +364,7 @@ class TestRegistration:
         with pytest.raises(ValidatorRegistrationError) as exc_info:
             pipeline.register_validator("not_a_validator")  # type: ignore
 
-        assert "Cannot register non-BaseValidator components" in str(
-            exc_info.value
-        )
+        assert "Cannot register non-BaseValidator components" in str(exc_info.value)
 
     def test_unregister_non_existent_validator_raises_error(self) -> None:
         # Arrange
@@ -423,7 +416,9 @@ class TestExecutionOrder:
         # Arrange
         execution_log: list[str] = []
         validators: list[BaseValidator] = [
-            TrackingValidator(priority=i, name=f"Val_{i:02d}", execution_log=execution_log)
+            TrackingValidator(
+                priority=i, name=f"Val_{i:02d}", execution_log=execution_log
+            )
             for i in reversed(range(1, 51))  # Registered in reverse priority order
         ]
         pipeline = ValidationPipeline(validators=validators, config=PipelineConfig())

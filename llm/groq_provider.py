@@ -11,26 +11,15 @@ class GroqProvider(BaseLLMProvider):
     """
 
     def __init__(self):
-        self.client = Groq(
-            api_key=settings.GROQ_API_KEY
-        )
+        self.client = Groq(api_key=settings.GROQ_API_KEY)
 
     def generate_response(self, prompt: str) -> str:
 
         completion = self.client.chat.completions.create(
-
             model=settings.MODEL_NAME,
-
             temperature=settings.TEMPERATURE,
-
             max_completion_tokens=settings.MAX_TOKENS,
-
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         return completion.choices[0].message.content
