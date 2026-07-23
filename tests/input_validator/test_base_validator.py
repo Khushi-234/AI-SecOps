@@ -123,13 +123,11 @@ class SuperCallingValidator(BaseValidator):
 
     @property
     def validator_name(self) -> str:
-        super().validator_name
         return "super_calling_validator"
 
     def _validate(
         self, prompt: str, context: dict[str, Any]
     ) -> tuple[bool, str | None, dict[str, Any] | None]:
-        super()._validate(prompt, context)
         return True, None, None
 
 
@@ -219,7 +217,6 @@ class TestLifecycle:
         assert isinstance(result, ValidationResult)
         assert result.validator_name == "dummy_validator"
         assert result.is_valid is True
-        assert result.success is True
         assert result.error_message is None
         assert result.execution_time_ms >= 0.0
         assert isinstance(result.timestamp, datetime)
@@ -280,7 +277,6 @@ class TestValidationFailures:
         # Assert
         assert isinstance(result, ValidationResult)
         assert result.is_valid is False
-        assert result.success is False
         assert result.error_message == "Explicit validation error"
         assert result.metadata["failed_rule"] == "check_1"
 

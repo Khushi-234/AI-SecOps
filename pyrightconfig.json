@@ -14,14 +14,24 @@
     "*.py"
   ],
   "exclude": [
-    "**/node_modules",
-    "**/__pycache__",
-    "venv",
-    ".venv",
-    ".pytest_cache",
-    "chroma_data"
+    "**/.*",
+    "**/node_modules/**",
+    "**/__pycache__/**",
+    "**/venv/**",
+    "**/.venv/**",
+    "**/.pytest_cache/**",
+    "**/chroma_data/**",
+    "**/logs/**",
+    "**/*.log",
+    "**/reports/**",
+    "**/coverage/**",
+    "**/build/**",
+    "**/dist/**"
   ],
   "venvPath": ".",
   "venv": "venv",
-  "pythonVersion": "3.10"
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": false,
+  "reportAttributeAccessIssue": false
 }

@@ -7,8 +7,8 @@ information that validators might need (e.g., pre‑computed resources).
 
 from dataclasses import dataclass
 from typing import Any, Dict , List, Optional
-from models import ValidationResult, ConversationPayload, ConversationMessage
-from logger import validator_logger
+from .models import ValidationResult, ConversationPayload, ConversationMessage
+from .logger import validator_logger
 @dataclass
 class ValidationContext:
     """Validates full conversation history alongside the current user prompt."""
@@ -45,12 +45,12 @@ class ValidationContext:
         if not payload.user or not payload.user.strip():
             validator_logger.warning("Context validation failed: empty current user prompt.")
             return ValidationResult(
-                success=False,
+                is_valid=False,
                 validator_name=validator_name,
-                message="Current user prompt cannot be empty.",
-                details={"reason": "empty_user_prompt"}
+                error_message="Current user prompt cannot be empty.",
+                metadata={"reason": "empty_user_prompt"}
             )
-
+        
         # 2. Check history length
         history_len = len(payload.history)
         if history_len > self.max_history_turns:
@@ -58,10 +58,10 @@ class ValidationContext:
                 f"Context validation failed: turn count {history_len} exceeds limit {self.max_history_turns}."
             )
             return ValidationResult(
-                success=False,
+                is_valid=False,
                 validator_name=validator_name,
-                message=f"Conversation history exceeds limit of {self.max_history_turns} turns.",
-                details={"turn_count": history_len, "max_turns": self.max_history_turns}
+                error_message=f"Conversation history exceeds limit of {self.max_history_turns} turns.",
+                metadata={"turn_count": history_len, "max_turns": self.max_history_turns}
             )
 
         # 3. Role and length verification
@@ -72,10 +72,10 @@ class ValidationContext:
                     f"Context validation failed: invalid role '{msg.role}' at index {idx}."
                 )
                 return ValidationResult(
-                    success=False,
+                    is_valid=False,
                     validator_name=validator_name,
-                    message=f"Invalid role '{msg.role}' at history index {idx}.",
-                    details={"index": idx, "invalid_role": msg.role}
+                    error_message=f"Invalid role '{msg.role}' at history index {idx}.",
+                    metadata={"index": idx, "invalid_role": msg.role}
                 )
             
             total_chars += len(msg.content or "")
@@ -86,18 +86,18 @@ class ValidationContext:
                 f"Context validation failed: combined payload size {total_chars} exceeds max {self.max_total_chars}."
             )
             return ValidationResult(
-                success=False,
+                is_valid=False,
                 validator_name=validator_name,
-                message=f"Total context size exceeds maximum allowance of {self.max_total_chars} characters.",
-                details={"total_chars": total_chars, "max_chars": self.max_total_chars}
+                error_message=f"Total context size exceeds maximum allowance of {self.max_total_chars} characters.",
+                metadata={"total_chars": total_chars, "max_chars": self.max_total_chars}
             )
 
-        validator_logger.info("Context validation passed successfully.")
+        validator_logger.info("Context validation passed is_valid=fully.")
         return ValidationResult(
-            success=True,
+            is_valid=True,
             validator_name=validator_name,
-            message="Conversation context is valid.",
-            details={
+            error_message=None,
+            metadata={
                 "turn_count": history_len,
                 "total_chars": total_chars
             }

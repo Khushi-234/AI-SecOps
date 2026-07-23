@@ -53,6 +53,11 @@ class BaseValidator(ABC):
         """The identifying name of the validator class."""
         pass
 
+    @property
+    def priority(self) -> int:
+        """Pipeline execution priority (lower values execute earlier). Defaults to 100."""
+        return 100
+
     @abstractmethod
     def _validate(
         self, prompt: str, context: dict[str, Any]

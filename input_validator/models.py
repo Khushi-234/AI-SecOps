@@ -28,20 +28,20 @@ class ValidationResult:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    @property
-    def success(self) -> bool:
-        """Backward-compatible alias for is_valid."""
-        return self.is_valid
+    # @property
+    # def success(self) -> bool:
+    #     """Backward-compatible alias for is_valid."""
+    #     return self.is_valid
 
-    @property
-    def message(self) -> str:
-        """Backward-compatible alias for error_message."""
-        return self.error_message or ""
+    # @property
+    # def message(self) -> str:
+    #     """Backward-compatible alias for error_message."""
+    #     return self.error_message or ""
 
-    @property
-    def details(self) -> Dict[str, Any]:
-        """Backward-compatible alias for metadata."""
-        return self.metadata
+    # @property
+    # def details(self) -> Dict[str, Any]:
+    #     """Backward-compatible alias for metadata."""
+    #     return self.metadata
 
 
 @dataclass(frozen=True)
@@ -83,8 +83,8 @@ class InputValidationResponse:
     execution_time_ms: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    @property
-    def success(self) -> bool:
-        """Backward-compatible alias for is_valid."""
-        return self.is_valid
+    # @property
+    # def success(self) -> bool:
+    #     """Backward-compatible alias for is_valid."""
+    #     return self.is_valid
 

@@ -230,7 +230,7 @@ class HookTrackingPipeline(ValidationPipeline):
     """Subclass of ValidationPipeline capturing lifecycle hook invocation events."""
 
     def __init__(self, validators: list[BaseValidator], config: PipelineConfig) -> None:
-        self.hook_events: list[tuple[str, Any]] = []
+        self.hook_events: list[tuple[Any, ...]] = []
         super().__init__(validators, config)
 
     def _before_pipeline(self, prompt: str, context: dict[str, Any]) -> None:
@@ -422,7 +422,7 @@ class TestExecutionOrder:
     def test_stress_execution_with_50_validators(self) -> None:
         # Arrange
         execution_log: list[str] = []
-        validators = [
+        validators: list[BaseValidator] = [
             TrackingValidator(priority=i, name=f"Val_{i:02d}", execution_log=execution_log)
             for i in reversed(range(1, 51))  # Registered in reverse priority order
         ]
