@@ -106,12 +106,34 @@ class RiskEngineError(Exception):
 
 class RiskEngineConfigurationError(RiskEngineError):
     """
-    Raised when configuration parameters, scoring weights, or thresholds are invalid.
+    Raised when Risk Engine configuration validation fails.
 
-    Responsibilities:
-        - Indicates post-init validation failure or invalid parameter initialization.
+    Adds structured field/value metadata while preserving the
+    base exception behaviour.
     """
 
+    def __init__(
+        self,
+        message: str,
+        field: str | None = None,
+        value: Any | None = None,
+        details: dict[str, Any] | None = None,
+        cause: Exception | None = None,
+    ) -> None:
+
+        combined_details = dict(details) if details else {}
+
+        if field is not None:
+            combined_details["field"] = field
+
+        if value is not None:
+            combined_details["value"] = value
+
+        super().__init__(
+            message=message,
+            details=combined_details,
+            cause=cause,
+        )
 
 class RiskAggregationError(RiskEngineError):
     """
