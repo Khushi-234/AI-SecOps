@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 from input_validator.utils import matches_regex, is_empty
 
 DEFAULT_FORMAT_RULES = {

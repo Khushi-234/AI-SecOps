@@ -17,7 +17,7 @@ Thread Safety:
 from __future__ import annotations
 
 from typing import Any
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 from input_validator.utils import is_valid_utf8, is_empty
 
 

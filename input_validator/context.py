@@ -6,12 +6,12 @@ information that validators might need (e.g., pre‑computed resources).
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
-from .models import ValidationResult, ConversationPayload, ConversationMessage
+from typing import  List, Optional
+from .models import ValidationResult, ConversationPayload
 from .logger import validator_logger
 
 
-@dataclass
+# @dataclass
 class ValidationContext:
     """Validates full conversation history alongside the current user prompt."""
 

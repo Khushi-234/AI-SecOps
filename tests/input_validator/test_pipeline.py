@@ -23,7 +23,7 @@ from input_validator.exceptions import (
 )
 from input_validator.models import InputValidationResponse, ValidationResult
 from input_validator.pipeline import ValidationPipeline
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 
 # ===========================================================================
 # Lightweight Mock Validators (Isolated for Testing)

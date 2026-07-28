@@ -40,7 +40,7 @@ from input_validator.validators.file_validator import FileValidator
 from input_validator.validators.language import LanguageValidator
 from input_validator.validators.context_rules import ContextRulesValidator
 from input_validator.validators.completeness import CompletenessValidator
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 
 
 # --------------------------------------------------------------------------- #

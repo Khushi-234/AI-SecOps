@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 
 # ===========================================================================
 # Module-level Language Keyword Constants (DRY and Immutable)

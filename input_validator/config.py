@@ -41,7 +41,10 @@ DEFAULT_LANGUAGE: str = "en"
 
 
 def _validate_range(
-    value: int | float, name: str, min_val: int | float, max_val: int | float
+    value: int | float, 
+    name: str, 
+    min_val: int | float, 
+    max_val: int | float
 ) -> None:
     """Validates that a numeric configuration value falls within a given range."""
     if not (min_val <= value <= max_val):
@@ -59,7 +62,10 @@ def _validate_non_negative(value: int | float, name: str) -> None:
 
 
 def _validate_min_max(
-    min_val: int | float, max_val: int | float, min_name: str, max_name: str
+    min_val: int | float, 
+    max_val: int | float, 
+    min_name: str, 
+    max_name: str
 ) -> None:
     """Validates that a minimum configuration limit is strictly less than its maximum counterpart."""
     if min_val >= max_val:

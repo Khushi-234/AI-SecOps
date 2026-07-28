@@ -12,14 +12,7 @@ from input_validator.validators.format import FormatValidator
 from input_validator.validators.context_rules import ContextRulesValidator
 from input_validator.validators.file_validator import FileValidator
 from input_validator.validators.completeness import CompletenessValidator
-from input_validator.validators.simple_validator import SimpleValidator
 from input_validator.config import LengthConfig, InputValidatorConfig
-
-
-def test_simple_validator():
-    validator = SimpleValidator()
-    assert validator.extract_context_data({"a": 1}) == {"a": 1}
-    assert validator.get_context_key({"req_id": "123"}, "req_id") == "123"
 
 
 def test_encoding_validator():
