@@ -131,11 +131,6 @@ class LanguageValidator(BaseValidator):
         """Validates that the detected language is supported by configuration."""
         lang_config = self.config
 
-        # TODO: Implement Lingua language detection library integration in Sprint 6.2.
-        # TODO: Implement FastText library detection integration in Sprint 6.2.
-        # TODO: Implement Language Model APIs (e.g. OpenAI/Azure translation endpoints) in Sprint 6.2.
-        # TODO: Implement automatic confidence score checking in Sprint 6.2.
-
         if not getattr(lang_config, "enabled", True):
             return True, None, {"language_enabled": False, "validation_passed": True}
 
@@ -218,7 +213,7 @@ class LanguageValidator(BaseValidator):
             return "unknown", 0.0
 
         max_score = max(en_score, hi_score, gu_score)
-        confidence = float(max_score / total_score)
+        confidence = max_score / total_score
 
         if max_score == en_score:
             return "en", confidence
