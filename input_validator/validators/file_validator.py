@@ -17,7 +17,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 from input_validator.utils import extract_file_extension, is_empty
 
 FILE_PATH_KEYS = {"file_path", "filepath", "file", "document", "attachment"}

@@ -22,11 +22,10 @@ from input_validator.validators import (
     SchemaValidator,
     CompletenessValidator,
 )
-from input_validator.validators.simple_validator import SimpleValidator
 
 
 class TestValidatorsIntegration:
-    """End-to-end integration tests for input_validator pipeline with all 10 concrete validators."""
+    """End-to-end integration tests for input_validator pipeline with all 9 concrete validators."""
 
     @pytest.fixture
     def valid_temp_file(self, tmp_path: Path) -> str:
@@ -46,7 +45,6 @@ class TestValidatorsIntegration:
             FileValidator(config=None),
             SchemaValidator(config=SchemaConfig()),
             CompletenessValidator(config=None),
-            SimpleValidator(config=None),
         ]
 
     def test_full_pipeline_successful_pass(
@@ -76,7 +74,7 @@ class TestValidatorsIntegration:
         response = pipeline.validate(prompt=prompt, context=context)
         assert isinstance(response, InputValidationResponse)
         assert response.is_valid is True
-        assert len(response.results) == 10
+        assert len(response.results) == 9
 
         # Verify priority execution order
         names = [res.validator_name for res in response.results]
@@ -90,7 +88,6 @@ class TestValidatorsIntegration:
             "ContextRulesValidator",
             "FileValidator",
             "CompletenessValidator",
-            "SimpleValidator",
         ]
         assert names == expected_names
 
@@ -124,7 +121,7 @@ class TestValidatorsIntegration:
 
         response = pipeline.validate(prompt=prompt, context=context)
         assert response.is_valid is False
-        assert len(response.results) == 10
+        assert len(response.results) == 9
 
         failed_validators = [
             r.validator_name for r in response.results if not r.is_valid

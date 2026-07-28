@@ -4,7 +4,7 @@
 Provides convenient imports for all concrete validator classes.
 """
 
-from .base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 from .empty import EmptyValidator
 from .length import LengthValidator
 from .schema import SchemaValidator

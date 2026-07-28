@@ -14,7 +14,7 @@ Responsibilities:
 from __future__ import annotations
 
 from typing import Any
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 from input_validator.utils import is_empty
 
 DEFAULT_REQUIRED_FIELDS = {"user", "request_id"}

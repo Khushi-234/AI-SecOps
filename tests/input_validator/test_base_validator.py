@@ -13,7 +13,7 @@ import pytest
 
 from input_validator.exceptions import ValidationError, ValidationExecutionError
 from input_validator.models import ValidationResult
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 
 # ===========================================================================
 # Test Doubles (Fake Validators)

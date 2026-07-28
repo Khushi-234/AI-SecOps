@@ -34,7 +34,8 @@ from input_validator.config import InputValidatorConfig
 from input_validator.exceptions import ValidationError
 from input_validator.models import InputValidationResponse
 from input_validator.pipeline import ValidationPipeline
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.utils import normalize_context
+from input_validator.base_validator import BaseValidator
 
 FRAMEWORK_VERSION = "1.0.0"
 
@@ -91,7 +92,7 @@ class InputValidator:
         Delegates invocation entirely to the ValidationPipeline.
         """
         self._validate_arguments(prompt, context)
-        ctx = self._normalize_context(context)
+        ctx = normalize_context(context)
         return self._pipeline.validate(prompt, ctx)
 
     # ===========================================================================
@@ -122,5 +123,5 @@ class InputValidator:
             )
 
     def _normalize_context(self, context: dict[str, Any] | None) -> dict[str, Any]:
-        """Normalizes metadata context structures."""
-        return dict(context) if context is not None else {}
+        """Normalizes metadata context structures (delegates to utils)."""
+        return normalize_context(context)

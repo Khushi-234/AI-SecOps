@@ -22,7 +22,7 @@ from input_validator.exceptions import (
 from input_validator.input_validator import FRAMEWORK_VERSION, InputValidator
 from input_validator.models import InputValidationResponse, ValidationResult
 from input_validator.pipeline import ValidationPipeline
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.base_validator import BaseValidator
 
 # ===========================================================================
 # Lightweight Mocks for Facade Delegation Testing

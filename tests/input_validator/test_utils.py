@@ -12,6 +12,9 @@ from input_validator.utils import (
     within_length,
     is_valid_utf8,
     matches_regex,
+    normalize_context,
+    compute_execution_time_ms,
+    is_validator_enabled,
 )
 from input_validator.models import ConversationPayload
 
@@ -116,3 +119,33 @@ class TestUtils:
         pattern = r"^\d{3}-\d{2}-\d{4}$"
         assert matches_regex(pattern, "123-45-6789") is True
         assert matches_regex(pattern, "123456789") is False
+
+    def test_normalize_context(self) -> None:
+        assert normalize_context(None) == {}
+        ctx = {"user_id": "123"}
+        normalized = normalize_context(ctx)
+        assert normalized == {"user_id": "123"}
+        assert normalized is not ctx  # returns a new dict copy
+
+    def test_compute_execution_time_ms(self) -> None:
+        import time
+        start = time.perf_counter()
+        time.sleep(0.01)
+        elapsed = compute_execution_time_ms(start)
+        assert elapsed > 0.0
+
+    def test_is_validator_enabled(self) -> None:
+        class DummyValidator:
+            pass
+
+        v = DummyValidator()
+        assert is_validator_enabled(v) is True
+
+        class ConfiguredValidator:
+            class Config:
+                enabled = False
+            config = Config()
+
+        v_disabled = ConfiguredValidator()
+        assert is_validator_enabled(v_disabled) is False
+

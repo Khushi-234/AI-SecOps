@@ -5,14 +5,14 @@ Currently includes simple helpers such as checking for empty strings, length bou
 and encoding validation. Extend this module as needed.
 """
 
-import re
-from typing import Any
-
 import json
+import re
+import time
 import unicodedata
 from pathlib import PurePath
 from typing import Any, Literal, Optional
 from .models import ConversationPayload, ConversationMessage
+
 
 
 def parse_raw_payload(data: Any) -> Optional[ConversationPayload]:
@@ -149,3 +149,22 @@ def is_valid_utf8(data: bytes) -> bool:
 def matches_regex(pattern: str, text: str) -> bool:
     """Shortcut for ``re.fullmatch``."""
     return re.fullmatch(pattern, text) is not None
+
+
+def normalize_context(context: dict[str, Any] | None) -> dict[str, Any]:
+    """Ensures context dictionary is initialized as a safe dictionary."""
+    return dict(context) if context is not None else {}
+
+
+def compute_execution_time_ms(start_time: float) -> float:
+    """Calculates execution time difference in milliseconds."""
+    return (time.perf_counter() - start_time) * 1000.0
+
+
+def is_validator_enabled(validator: Any) -> bool:
+    """Checks if a validator is enabled based on its config properties."""
+    config = getattr(validator, "config", None)
+    if config is None:
+        return True
+    return getattr(config, "enabled", True)
+

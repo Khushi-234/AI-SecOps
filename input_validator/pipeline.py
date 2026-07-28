@@ -37,7 +37,12 @@ from typing import Any
 from input_validator.config import PipelineConfig
 from input_validator.exceptions import ValidatorRegistrationError
 from input_validator.models import InputValidationResponse, ValidationResult
-from input_validator.validators.base_validator import BaseValidator
+from input_validator.utils import (
+    compute_execution_time_ms,
+    is_validator_enabled,
+    normalize_context,
+)
+from input_validator.base_validator import BaseValidator
 
 
 class ValidationPipeline:
@@ -99,7 +104,7 @@ class ValidationPipeline:
         Respects the fail_fast setting, stopping pipeline checks immediately on failure.
         """
         start_time = time.perf_counter()
-        ctx = self._normalize_context(context)
+        ctx = normalize_context(context)
 
         self._before_pipeline(prompt, ctx)
         results: list[ValidationResult] = []
@@ -129,7 +134,7 @@ class ValidationPipeline:
                     fail_fast_triggered = True
                     break
 
-        elapsed_ms = self._compute_execution_time(start_time)
+        elapsed_ms = compute_execution_time_ms(start_time)
         response = self._aggregate_results(
             results,
             elapsed_ms,
@@ -153,7 +158,7 @@ class ValidationPipeline:
         """Runs validation checks on a single validator instance, tracking lifecycle hooks."""
         self._before_validator(validator, prompt, context)
 
-        if not self._is_enabled(validator):
+        if not is_validator_enabled(validator):
             skipped_result = self._build_skipped_result(validator)
             self._after_validator(validator, skipped_result)
             return skipped_result
@@ -172,21 +177,6 @@ class ValidationPipeline:
             timestamp=datetime.now(timezone.utc),
             metadata={"skipped": True, "reason": "Disabled by configuration"},
         )
-
-    def _is_enabled(self, validator: BaseValidator) -> bool:
-        """Checks if a validator is enabled based on its config properties."""
-        config = getattr(validator, "config", None)
-        if config is None:
-            return True
-        return getattr(config, "enabled", True)
-
-    def _normalize_context(self, context: dict[str, Any] | None) -> dict[str, Any]:
-        """Ensures the context dictionary is initialized and safe for propagation."""
-        return dict(context) if context is not None else {}
-
-    def _compute_execution_time(self, start_time: float) -> float:
-        """Calculates time difference in milliseconds."""
-        return (time.perf_counter() - start_time) * 1000.0
 
     def _aggregate_results(
         self,
