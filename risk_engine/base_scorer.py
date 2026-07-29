@@ -38,15 +38,28 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, final
 
-from ..config import RiskEngineConfig
-from ..constants import RISK_SCORE_MAX, RISK_SCORE_MIN, RISK_SCORE_PRECISION, WEIGHT_TOLERANCE
-from ..enums import ScoringStrategy
-from ..exceptions import (
+from risk_engine.config import RiskEngineConfig
+from risk_engine.constants import (
+    DEFAULT_SCORE_PRECISION,
+    MAX_NORMALIZED_SCORE,
+    MIN_NORMALIZED_SCORE,
+    FLOAT_COMPARISON_TOLERANCE,
+)
+from risk_engine.enums import ScoringStrategy
+from risk_engine.exceptions import (
     InvalidRiskInputError,
     RiskEngineExecutionError,
     RiskValidationError,
 )
-from ..models import RiskEvidence, RiskScore, RiskTelemetry
+from risk_engine.models import RiskEvidence, RiskScore, RiskTelemetry
+from risk_engine.utils import clamp_score, round_score, normalize_score
+
+RISK_SCORE_MIN: float = MIN_NORMALIZED_SCORE
+RISK_SCORE_MAX: float = MAX_NORMALIZED_SCORE
+RISK_SCORE_PRECISION: int = DEFAULT_SCORE_PRECISION
+WEIGHT_TOLERANCE: float = FLOAT_COMPARISON_TOLERANCE
+
+
 
 
 __all__ = ["BaseScorer"]
@@ -185,9 +198,10 @@ class BaseScorer(ABC):
                     f"Unexpected runtime failure in {self.__class__.__name__}.score(): "
                     f"{type(exc).__name__}"
                 ),
-                strategy=self.__class__.__name__,
+                details={"strategy": self.__class__.__name__},
                 cause=exc,
             ) from exc
+
 
     # --------------------------------------------------------------------- #
     # ABSTRACT INTERFACE
@@ -377,8 +391,12 @@ class BaseScorer(ABC):
         algorithm anomalies.
         """
         score = float(raw_score)
-        clamped = max(RISK_SCORE_MIN, min(RISK_SCORE_MAX, score))
-        return self._round_score(clamped)
+        return normalize_score(
+            score,
+            min_val=RISK_SCORE_MIN,
+            max_val=RISK_SCORE_MAX,
+            precision=RISK_SCORE_PRECISION,
+        )
 
     def _round_score(self, score: float, precision: int | None = None) -> float:
         """
@@ -393,7 +411,8 @@ class BaseScorer(ABC):
             float: The rounded score.
         """
         places: int = precision if precision is not None else RISK_SCORE_PRECISION
-        return round(score, places)
+        return round_score(score, precision=places)
+
 
     def _validate_score(self, normalized_score: float) -> None:
         """
@@ -551,12 +570,13 @@ class BaseScorer(ABC):
         """
         return RiskTelemetry(
             execution_time_ms=metadata["execution_time_ms"],
-            strategy=metadata["scorer_class"],
-            evidence_count=metadata["evidence_count"],
-            raw_score=metadata["raw_score"],
-            normalized_score=metadata["normalized_score"],
+            scoring_strategy=str(metadata["scorer_class"]),
+            aggregation_strategy="N/A",
+            confidence_strategy="N/A",
+            processed_evidence_count=int(metadata["evidence_count"]),
             metadata=metadata,
         )
+
 
     # --------------------------------------------------------------------- #
     # RESULT CONSTRUCTION
@@ -591,15 +611,14 @@ class BaseScorer(ABC):
         than mutating evidence objects.
         """
         return RiskScore(
-            score=normalized_score,
+            scoring_strategy=self.__class__.__name__,
             raw_score=raw_score,
-            strategy=self.__class__.__name__,
-            evidence_count=len(evidence),
-            evidence_refs=metadata.get("evidence_refs", []),
-            telemetry=telemetry,
+            normalized_score=normalized_score,
+            weight=1.0,
+            confidence=1.0,
             metadata=metadata,
-            **kwargs,
         )
+
 
     # --------------------------------------------------------------------- #
     # PROPERTIES

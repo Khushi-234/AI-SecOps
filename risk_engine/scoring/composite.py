@@ -47,9 +47,10 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from ..base_scorer import BaseScorer
-from ...enums import ScoringStrategy
-from ...models import RiskEvidence, RiskScore
+from risk_engine.base_scorer import BaseScorer
+from risk_engine.enums import ScoringStrategy
+from risk_engine.models import RiskEvidence, RiskScore
+
 
 
 __all__ = ["CompositeScorer"]
@@ -185,15 +186,19 @@ class CompositeScorer(BaseScorer):
             float: The numerically stable composite sum.
         """
         scoring_config = self._config.scoring
+        weighted_w = float(getattr(scoring_config, "weighted_weight", 0.4))
+        threshold_w = float(getattr(scoring_config, "threshold_weight", 0.3))
+        adaptive_w = float(getattr(scoring_config, "adaptive_weight", 0.3))
+
 
         weighted_product = (
-            strategy_results[ScoringStrategy.WEIGHTED].score * scoring_config.weighted_weight
+            strategy_results[ScoringStrategy.WEIGHTED].normalized_score * weighted_w
         )
         threshold_product = (
-            strategy_results[ScoringStrategy.THRESHOLD].score * scoring_config.threshold_weight
+            strategy_results[ScoringStrategy.THRESHOLD].normalized_score * threshold_w
         )
         adaptive_product = (
-            strategy_results[ScoringStrategy.ADAPTIVE].score * scoring_config.adaptive_weight
+            strategy_results[ScoringStrategy.ADAPTIVE].normalized_score * adaptive_w
         )
 
         return math.fsum((weighted_product, threshold_product, adaptive_product))

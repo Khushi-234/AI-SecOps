@@ -2,7 +2,7 @@ from __future__ import annotations
 import math
 from typing import Iterable
 
-from risk_engine.scoring.base_scorer import BaseScorer
+from risk_engine.base_scorer import BaseScorer
 from risk_engine.models import RiskEvidence
 from risk_engine.enums import RiskLevel
 
@@ -87,7 +87,7 @@ class ThresholdScorer(BaseScorer):
           self.config.thresholds.medium
           self.config.thresholds.high
         """
-        thresholds = self.config.thresholds
+        thresholds = self._config.thresholds
         if risk_score < thresholds.low:
             return RiskLevel.LOW
         if risk_score < thresholds.medium:
@@ -105,12 +105,15 @@ class ThresholdScorer(BaseScorer):
 
         Returns:
             float: Contribution value from configuration
-
-        Configuration:
-        - Uses contribution values from RiskEngineConfig:
-          self.config.threshold_contributions dictionary
         """
-        return self.config.threshold_contributions[category]
+        contributions = getattr(self._config, "threshold_contributions", {
+            RiskLevel.LOW: 0.1,
+            RiskLevel.MEDIUM: 0.4,
+            RiskLevel.HIGH: 0.7,
+            RiskLevel.CRITICAL: 1.0,
+        })
+        return float(contributions.get(category, 0.25))
+
 
     def _compute_threshold_sum(self, evidence: Iterable[RiskEvidence]) -> float:
         """

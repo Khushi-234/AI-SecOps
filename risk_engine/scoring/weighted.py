@@ -2,7 +2,7 @@ from __future__ import annotations
 import math
 from typing import Iterable
 
-from risk_engine.scoring.base_scorer import BaseScorer
+from risk_engine.base_scorer import BaseScorer
 from risk_engine.models import RiskEvidence
 
 class WeightedScorer(BaseScorer):
@@ -79,6 +79,6 @@ class WeightedScorer(BaseScorer):
         """
         # Using math.fsum for stable floating-point summation
         return math.fsum(
-            evidence_item.risk_score * evidence_item.weight
+            evidence_item.risk_score * float(getattr(evidence_item, "weight", 1.0))
             for evidence_item in evidence
         )

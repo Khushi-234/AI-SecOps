@@ -41,8 +41,9 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from ..base_scorer import BaseScorer
-from ...models import RiskEvidence
+from risk_engine.base_scorer import BaseScorer
+from risk_engine.models import RiskEvidence
+
 
 
 __all__ = ["AdaptiveScorer"]

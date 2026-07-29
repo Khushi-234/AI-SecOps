@@ -134,3 +134,42 @@ DEFAULT_SCORING_STRATEGY: str = "COMPOSITE"
 
 #: Default multi-module finding aggregation strategy identifier.
 DEFAULT_AGGREGATION_STRATEGY: str = "MAX_SCORE"
+
+
+# ===========================================================================
+# 8. Finding Severity Ranking & Score Mapping
+# ===========================================================================
+
+from risk_engine.enums import FindingSeverity, RiskLevel
+
+#: Severity ranking matrix for deterministic sorting
+SEVERITY_RANKING: dict[str, int] = {
+    FindingSeverity.CRITICAL.value: 5,
+    FindingSeverity.HIGH.value: 4,
+    FindingSeverity.MEDIUM.value: 3,
+    FindingSeverity.LOW.value: 2,
+    FindingSeverity.INFO.value: 1,
+}
+
+#: Severity risk score defaults for upstream findings lacking explicit numeric scores
+SEVERITY_SCORE_MAP: dict[str, float] = {
+    FindingSeverity.CRITICAL.value: 1.0,
+    FindingSeverity.HIGH.value: 0.85,
+    FindingSeverity.MEDIUM.value: 0.60,
+    FindingSeverity.LOW.value: 0.30,
+    FindingSeverity.INFO.value: 0.0,
+}
+
+# ===========================================================================
+# 9. Risk Level Priority Mapping
+# ===========================================================================
+
+#: Priority matrix for assigned risk levels
+RISK_LEVEL_PRIORITY: dict[RiskLevel, int] = {
+    RiskLevel.CRITICAL: 10,
+    RiskLevel.HIGH: 8,
+    RiskLevel.MEDIUM: 5,
+    RiskLevel.LOW: 1,
+}
+
+
