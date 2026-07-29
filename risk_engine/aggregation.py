@@ -37,7 +37,8 @@ Aggregation Workflow
 3. **Deduplication & Merging (`_merge_duplicates`)**: Groups findings by compound
    fingerprint and applies configurable merge strategies (`HIGHEST_SCORE`,
    `FIRST_MATCH`, `MERGE_ALL`, `DEDUPLICATE`) without metadata loss.
-4. **Deterministic Sorting (`_sort_evidence`)**: Sorts aggregated evidence by
+4. **D
+eterministic Sorting (`_sort_evidence`)**: Sorts aggregated evidence by
    risk score (descending), confidence (descending), severity rank (descending),
    and lexicographical identity (source, detector, finding_type, evidence_id).
 
