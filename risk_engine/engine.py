@@ -220,7 +220,7 @@ class RiskEngine:
                 execution_time_ms=total_execution_time_ms,
                 scoring_strategy=getattr(risk_score_obj, "scoring_strategy", "COMPOSITE"),
                 aggregation_strategy=self._config.aggregation.strategy,
-                confidence_strategy=str(confidence_strategy or "WEIGHTED"),
+                confidence_strategy=confidence_strategy or "WEIGHTED",
                 processed_evidence_count=len(evidence),
                 metadata={
                     "aggregation_time_ms": round(aggregation_time_ms, 2),

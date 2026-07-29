@@ -37,13 +37,20 @@ class RiskEngineError(Exception):
     def __init__(
         self,
         message: str,
+        field: str | None = None,
+        value: Any | None = None,
         details: dict[str, Any] | None = None,
         cause: Exception | None = None,
     ) -> None:
-        """Initializes the exception with message, structured metadata, and optional cause."""
+        """Initializes the exception with message, optional field/value, structured metadata, and optional cause."""
         super().__init__(message)
         self._message: str = message
-        self._details: dict[str, Any] = dict(details) if details else {}
+        combined_details = dict(details) if details else {}
+        if field is not None:
+            combined_details["field"] = field
+        if value is not None:
+            combined_details["value"] = value
+        self._details: dict[str, Any] = combined_details
         self._timestamp: datetime = datetime.now(timezone.utc)
         if cause is not None:
             self.__cause__ = cause
@@ -120,18 +127,11 @@ class RiskEngineConfigurationError(RiskEngineError):
         details: dict[str, Any] | None = None,
         cause: Exception | None = None,
     ) -> None:
-
-        combined_details = dict(details) if details else {}
-
-        if field is not None:
-            combined_details["field"] = field
-
-        if value is not None:
-            combined_details["value"] = value
-
         super().__init__(
             message=message,
-            details=combined_details,
+            field=field,
+            value=value,
+            details=details,
             cause=cause,
         )
 
