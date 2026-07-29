@@ -220,12 +220,12 @@ class RiskAssessment:
             "assessment_id": self.assessment_id,
             "composite_score": self.composite_score,
             "confidence_score": self.confidence_score,
-            "risk_level": str(
+            "risk_level": (
                 self.risk_level.value
                 if isinstance(self.risk_level, Enum)
                 else self.risk_level
             ),
-            "recommended_action": str(
+            "recommended_action": (
                 self.recommended_action.value
                 if isinstance(self.recommended_action, Enum)
                 else self.recommended_action
@@ -263,11 +263,11 @@ class RiskRecommendation:
     def to_dict(self) -> dict[str, Any]:
         """Serializes policy recommendation object to a dictionary."""
         return {
-            "action": str(
+            "action": 
                 self.action.value
                 if isinstance(self.action, Enum)
                 else self.action
-            ),
+            ,
             "reason": self.reason,
             "priority": self.priority,
             "requires_human_review": self.requires_human_review,

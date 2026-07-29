@@ -369,7 +369,7 @@ class ConfidenceCalculator:
 
         counts: dict[str, int] = {}
         for item in evidence:
-            sev = str(item.severity).upper()
+            sev = item.severity.upper()
             counts[sev] = counts.get(sev, 0) + 1
 
         max_count = max(counts.values())
