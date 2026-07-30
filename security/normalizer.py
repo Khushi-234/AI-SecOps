@@ -4,6 +4,7 @@ import re
 import time
 import unicodedata
 from dataclasses import dataclass
+from typing import Any, cast
 
 from security.exceptions import ConfigurationError, NormalizationError, ValidationError
 from security.models import NormalizationMetadata, NormalizationResult
@@ -190,8 +191,7 @@ class TextNormalizer:
         Note: The returned change count is an approximate metric indicating character differences.
         """
         try:
-            # pyrefly: ignore [bad-argument-type]
-            normalized = unicodedata.normalize(self.config.unicode_form, text)
+            normalized = unicodedata.normalize(cast(Any, self.config.unicode_form), text)
         except Exception as e:
             raise NormalizationError(f"Unicode normalization failed: {e}") from e
 

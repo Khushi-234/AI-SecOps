@@ -38,8 +38,7 @@ class TargetApp:
                 ],
                 temperature=0.7,
             )
-            # pyrefly: ignore [bad-return]
-            return response.choices[0].message.content
+            return response.choices[0].message.content or ""
         except Exception as e:
             return f"Cloud connection failure: {str(e)}"
 

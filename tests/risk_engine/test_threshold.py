@@ -103,7 +103,7 @@ def test_threshold_scorer_boundary_classification(
 # =============================================================================
 
 
-def test_threshold_scorer_multiple_findings(scorer: WeightedScorer):
+def test_threshold_scorer_multiple_findings(scorer: ThresholdScorer):
     """Verify scoring multiple findings accumulates threshold contributions."""
     # Arrange: two findings mapping to LOW (0.1) and MEDIUM (0.4) -> raw sum 0.5
     ev1 = RiskEvidence(
