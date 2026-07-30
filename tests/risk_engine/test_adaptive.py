@@ -6,19 +6,24 @@ Tests public behavior of AdaptiveScorer:
     - Configuration-driven behavior (enabling/disabling factor types, custom factor maps)
     - Composite score calculation and normalization/clamping
     - Boundary conditions (0.0 scores, score clamping at 1.0)
-    - Fail-secure empty and null evidence validation
-    - Deterministic execution repeatability
+    - Complete RiskScore result model verification (scoring_strategy, confidence, weight, metadata)
+    - Fail-secure empty and null evidence validation (InvalidRiskInputError)
+    - Deterministic execution repeatability with fixed timestamps
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
 import pytest
 
 from risk_engine.config import AdaptiveConfig, RiskEngineConfig
-from risk_engine.exceptions import InvalidRiskInputError, RiskEngineExecutionError
+from risk_engine.exceptions import InvalidRiskInputError
 from risk_engine.models import RiskEvidence, RiskScore
 from risk_engine.scoring.adaptive import AdaptiveScorer
+
+#: Deterministic UTC timestamp for unit test fixtures
+FIXED_TIMESTAMP: datetime = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
 
 # =============================================================================
@@ -49,7 +54,7 @@ def custom_scorer() -> AdaptiveScorer:
 
 @pytest.fixture
 def sample_evidence() -> RiskEvidence:
-    """Provide a canonical RiskEvidence fixture."""
+    """Provide a canonical RiskEvidence fixture with a deterministic timestamp."""
     return RiskEvidence(
         evidence_id="ev-adaptive-1",
         source_module="PROMPT_FIREWALL",
@@ -59,7 +64,7 @@ def sample_evidence() -> RiskEvidence:
         confidence=0.90,
         risk_score=0.50,
         description="Sample finding for adaptive scoring",
-        timestamp=datetime.now(timezone.utc),
+        timestamp=FIXED_TIMESTAMP,
     )
 
 
@@ -82,7 +87,7 @@ def test_adaptive_scorer_initialization(default_scorer: AdaptiveScorer):
 def test_adaptive_scorer_single_finding_default_config(
     default_scorer: AdaptiveScorer, sample_evidence: RiskEvidence
 ):
-    """Verify scoring with default configuration applies default factor (1.0)."""
+    """Verify scoring with default configuration applies default factor (1.0) and builds a valid RiskScore."""
     # Act
     result = default_scorer.score([sample_evidence])
 
@@ -91,6 +96,9 @@ def test_adaptive_scorer_single_finding_default_config(
     assert result.scoring_strategy == "AdaptiveScorer"
     assert result.raw_score == 0.50
     assert result.normalized_score == 0.50
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
+    assert result.metadata.get("scorer_class") == "AdaptiveScorer"
 
 
 def test_adaptive_scorer_detector_factor_resolution(custom_scorer: AdaptiveScorer):
@@ -105,14 +113,18 @@ def test_adaptive_scorer_detector_factor_resolution(custom_scorer: AdaptiveScore
         confidence=0.90,
         risk_score=0.50,
         description="Detector factor test",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
     result = custom_scorer.score([evidence])
 
     # Assert: 0.50 * 1.5 = 0.75
+    assert result.scoring_strategy == "AdaptiveScorer"
     assert result.raw_score == 0.75
     assert result.normalized_score == 0.75
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
 
 
 def test_adaptive_scorer_finding_type_factor_resolution(custom_scorer: AdaptiveScorer):
@@ -127,6 +139,7 @@ def test_adaptive_scorer_finding_type_factor_resolution(custom_scorer: AdaptiveS
         confidence=0.90,
         risk_score=0.50,
         description="Finding type factor test",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
@@ -135,6 +148,8 @@ def test_adaptive_scorer_finding_type_factor_resolution(custom_scorer: AdaptiveS
     # Assert: 0.50 * 1.2 = 0.60
     assert result.raw_score == 0.60
     assert result.normalized_score == 0.60
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
 
 
 def test_adaptive_scorer_default_factor_fallback(custom_scorer: AdaptiveScorer):
@@ -149,6 +164,7 @@ def test_adaptive_scorer_default_factor_fallback(custom_scorer: AdaptiveScorer):
         confidence=0.80,
         risk_score=0.50,
         description="Default fallback test",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
@@ -157,6 +173,8 @@ def test_adaptive_scorer_default_factor_fallback(custom_scorer: AdaptiveScorer):
     # Assert: 0.50 * 0.8 = 0.40
     assert result.raw_score == 0.40
     assert result.normalized_score == 0.40
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
 
 
 def test_adaptive_scorer_disabled_detector_adjustment():
@@ -181,6 +199,7 @@ def test_adaptive_scorer_disabled_detector_adjustment():
         confidence=0.90,
         risk_score=0.50,
         description="Disabled detector adjustment test",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
@@ -188,6 +207,9 @@ def test_adaptive_scorer_disabled_detector_adjustment():
 
     # Assert: skips detector (2.0), uses finding_type (1.2) -> 0.50 * 1.2 = 0.60
     assert result.raw_score == 0.60
+    assert result.normalized_score == 0.60
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
 
 
 # =============================================================================
@@ -207,6 +229,7 @@ def test_adaptive_scorer_zero_risk_score(custom_scorer: AdaptiveScorer):
         confidence=0.50,
         risk_score=0.0,
         description="Zero score item",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
@@ -215,6 +238,8 @@ def test_adaptive_scorer_zero_risk_score(custom_scorer: AdaptiveScorer):
     # Assert: 0.0 * 1.5 = 0.0
     assert result.raw_score == 0.0
     assert result.normalized_score == 0.0
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
 
 
 def test_adaptive_scorer_max_score_clamping(custom_scorer: AdaptiveScorer):
@@ -229,6 +254,7 @@ def test_adaptive_scorer_max_score_clamping(custom_scorer: AdaptiveScorer):
         confidence=0.95,
         risk_score=0.80,
         description="Clamping test item",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
@@ -237,36 +263,40 @@ def test_adaptive_scorer_max_score_clamping(custom_scorer: AdaptiveScorer):
     # Assert
     assert result.raw_score == pytest.approx(1.20)
     assert result.normalized_score == 1.00
-
+    assert result.confidence == 1.0
+    assert result.weight == 1.0
 
 
 # =============================================================================
 # 4. Fail-Secure & Negative Tests
 # =============================================================================
 
-        
-def test_adaptive_scorer_empty_evidence_raises_error(default_scorer: AdaptiveScorer):
-    """Verify scoring an empty evidence collection raises an exception."""
+
+def test_adaptive_scorer_empty_evidence_raises_invalid_input(default_scorer: AdaptiveScorer):
+    """Verify scoring an empty evidence collection raises InvalidRiskInputError."""
     # Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidRiskInputError) as exc_info:
         default_scorer.score([])
+    assert "cannot be empty" in exc_info.value.message
 
 
-def test_adaptive_scorer_none_evidence_raises_error(default_scorer: AdaptiveScorer):
-    """Verify scoring None raises an exception."""
+def test_adaptive_scorer_none_evidence_raises_invalid_input(default_scorer: AdaptiveScorer):
+    """Verify scoring None raises InvalidRiskInputError."""
     # Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidRiskInputError) as exc_info:
         default_scorer.score(None)  # type: ignore[arg-type]
+    assert "cannot be empty" in exc_info.value.message
 
 
-def test_adaptive_scorer_invalid_evidence_item_raises_error(default_scorer: AdaptiveScorer):
-    """Verify scoring a collection with non-RiskEvidence objects raises an exception."""
+def test_adaptive_scorer_invalid_evidence_item_raises_invalid_input(default_scorer: AdaptiveScorer):
+    """Verify scoring a collection with non-RiskEvidence objects raises InvalidRiskInputError."""
     # Arrange
     invalid_evidence = ["not_a_risk_evidence_object"]
 
     # Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidRiskInputError) as exc_info:
         default_scorer.score(invalid_evidence)  # type: ignore[arg-type]
+    assert "not a RiskEvidence instance" in exc_info.value.message
 
 
 # =============================================================================
@@ -277,7 +307,7 @@ def test_adaptive_scorer_invalid_evidence_item_raises_error(default_scorer: Adap
 def test_adaptive_scorer_deterministic_repeatability(
     custom_scorer: AdaptiveScorer, sample_evidence: RiskEvidence
 ):
-    """Verify multiple score evaluations produce identical raw and normalized scores."""
+    """Verify multiple score evaluations produce identical complete RiskScore objects."""
     # Act
     res1 = custom_scorer.score([sample_evidence])
     res2 = custom_scorer.score([sample_evidence])
@@ -285,3 +315,6 @@ def test_adaptive_scorer_deterministic_repeatability(
     # Assert
     assert res1.raw_score == res2.raw_score
     assert res1.normalized_score == res2.normalized_score
+    assert res1.scoring_strategy == res2.scoring_strategy
+    assert res1.confidence == res2.confidence
+    assert res1.weight == res2.weight
