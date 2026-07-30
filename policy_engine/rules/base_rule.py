@@ -1,7 +1,5 @@
 """
 Abstract Base Interface for Policy Rules.
-
-Defines the contract for all modular policy decision rules.
 """
 
 from __future__ import annotations

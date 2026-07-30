@@ -42,8 +42,8 @@ class InjectionSanitizer(BaseSanitizer):
 
         for regex in self.DANGEROUS_TOKENS:
             for match in regex.finditer(prompt):
-                original = match.group(0)
-                start, end = match.span()
+                original = match.group(0) #matching the dangerous token
+                start, end = match.span() #getting the start and end index of the matched token
                 edits.append(
                     SanitizationEdit(
                         edit_id=f"injection_strip_{edit_counter}",

@@ -9,8 +9,6 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Type, TypeVar
 
-from policy_engine.actions import ACTION_PRIORITY, PolicyAction
-
 T = TypeVar("T", bound="BaseStringEnum")
 
 
@@ -54,4 +52,11 @@ class SanitizationType(BaseStringEnum):
     TAG_REMOVAL = "TAG_REMOVAL"
 
 
-__all__ = ["SanitizationType", "ACTION_PRIORITY", "BaseStringEnum"]
+def __getattr__(name: str) -> Any:
+    if name in ("ACTION_PRIORITY", "PolicyAction"):
+        from policy_engine import actions
+        return getattr(actions, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = ["SanitizationType", "ACTION_PRIORITY", "PolicyAction", "BaseStringEnum"]

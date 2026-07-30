@@ -1,8 +1,5 @@
 """
 Severity-Level-Based Policy Decision Rules.
-
-Maps qualitative risk severity classifications (CRITICAL, HIGH, MEDIUM, LOW)
-to policy decisions.
 """
 
 from __future__ import annotations
@@ -15,7 +12,7 @@ from policy_engine.rules.base_rule import BasePolicyRule
 
 class SeverityRule(BasePolicyRule):
     """
-    Evaluates policy decision based on qualitative risk level tier.
+    Evaluates policy decision based on qualitative risk level tier (CRITICAL, HIGH, MEDIUM, LOW).
     """
 
     @property
@@ -29,6 +26,8 @@ class SeverityRule(BasePolicyRule):
             return PolicyDecision(
                 request_id=context.request_id,
                 action=PolicyAction.BLOCK,
+                is_approved=False,
+                final_prompt=None,
                 reason="CRITICAL risk level tier requires immediate BLOCK enforcement.",
                 risk_score=context.risk_score,
                 rule_triggered=self.rule_name,
@@ -37,6 +36,8 @@ class SeverityRule(BasePolicyRule):
             return PolicyDecision(
                 request_id=context.request_id,
                 action=PolicyAction.SANITIZE,
+                is_approved=True,
+                final_prompt=context.original_prompt,
                 reason="HIGH risk level tier requires prompt SANITIZE enforcement.",
                 risk_score=context.risk_score,
                 rule_triggered=self.rule_name,
@@ -45,6 +46,8 @@ class SeverityRule(BasePolicyRule):
             return PolicyDecision(
                 request_id=context.request_id,
                 action=PolicyAction.WARN,
+                is_approved=True,
+                final_prompt=context.original_prompt,
                 reason="MEDIUM risk level tier requires WARN monitoring directive.",
                 risk_score=context.risk_score,
                 rule_triggered=self.rule_name,
@@ -53,6 +56,8 @@ class SeverityRule(BasePolicyRule):
             return PolicyDecision(
                 request_id=context.request_id,
                 action=PolicyAction.ALLOW,
+                is_approved=True,
+                final_prompt=context.original_prompt,
                 reason="LOW risk level tier approved for normal processing.",
                 risk_score=context.risk_score,
                 rule_triggered=self.rule_name,
