@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     DEBUG: bool = True
 
-    # -------------------------
+    # -------------------------py
     # Database
     # -------------------------
     DATABASE_PATH: str = "data/database.db"

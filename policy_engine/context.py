@@ -83,7 +83,7 @@ class RiskContext:
         metadata: dict[str, Any] | None = None,
     ) -> RiskContext:
         """
-        Factory helper creating a RiskContext directly from a RiskEngineResponse,
+    Factory helper creating a RiskContext directly from a RiskEngineResponse,
         RiskAssessment, or dictionary payload.
         """
         combined_meta = dict(metadata or {})
