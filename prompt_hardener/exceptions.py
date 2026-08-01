@@ -14,14 +14,14 @@ class HardeningError(Exception):
         self.details = details or {}
 
 
-class SanitizationError(HardeningError):
-    """Raised when an error occurs during prompt sanitization."""
+class RuleExecutionError(HardeningError):
+    """Raised when an error occurs during security rule evaluation."""
 
     pass
 
 
-class RuleExecutionError(HardeningError):
-    """Raised when an error occurs during security rule evaluation."""
+class InjectionError(HardeningError):
+    """Raised when prompt injection processing fails."""
 
     pass
 
@@ -40,8 +40,8 @@ class ConfigurationError(HardeningError):
 
 __all__ = [
     "HardeningError",
-    "SanitizationError",
     "RuleExecutionError",
+    "InjectionError",
     "InvalidPromptError",
     "ConfigurationError",
 ]
