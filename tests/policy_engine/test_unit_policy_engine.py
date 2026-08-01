@@ -50,7 +50,6 @@ def test_policy_engine_evaluate_allow_flow():
     assert decision.request_id == "req-pe-allow"
     assert decision.action == PolicyAction.ALLOW
     assert decision.is_approved is True
-    assert decision.final_prompt == "Safe input prompt"
     assert "execution_time_ms" in decision.metadata
     assert decision.metadata["risk_score"] == 0.10
     assert decision.metadata["score_100"] == 10.0
@@ -61,17 +60,14 @@ def test_policy_engine_evaluate_sanitize_flow():
     ctx = RiskContext(
         request_id="req-pe-san",
         original_prompt="Contact alice@corp.com or use AKIA1234567890ABCDEF",
-        risk_score=0.75,
+        risk_score=0.50,
     )
 
     decision = engine.evaluate(ctx)
 
     assert decision.action == PolicyAction.SANITIZE
     assert decision.is_approved is True
-    assert decision.final_prompt is not None
-    assert "alice@corp.com" not in decision.final_prompt
-    assert "AKIA1234567890ABCDEF" not in decision.final_prompt
-    assert len(decision.applied_sanitizations) >= 2
+    assert decision.metadata.get("enforcement_status") == "SANITIZE_REQUIRED"
 
 
 def test_policy_engine_evaluate_block_flow():
@@ -87,7 +83,6 @@ def test_policy_engine_evaluate_block_flow():
 
     assert decision.action == PolicyAction.BLOCK
     assert decision.is_approved is False
-    assert decision.final_prompt is None
     assert decision.rule_triggered in ("THREAT_RULE", "RISK_SCORE_RULE")
 
 
@@ -106,7 +101,6 @@ def test_policy_engine_strict_fail_secure_true():
     assert decision.request_id == "req-fail-sec"
     assert decision.action == PolicyAction.BLOCK
     assert decision.is_approved is False
-    assert decision.final_prompt is None
     assert decision.rule_triggered == "FAIL_SECURE_ERROR"
     assert "Database connection crashed" in decision.reason
     assert "error" in decision.metadata
@@ -145,3 +139,4 @@ def test_policy_engine_evaluate_from_risk_response():
 
     assert decision.request_id == "req-resp-conv"
     assert decision.action in (PolicyAction.BLOCK, PolicyAction.SANITIZE)
+

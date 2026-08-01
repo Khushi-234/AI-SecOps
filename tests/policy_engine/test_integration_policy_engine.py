@@ -61,7 +61,6 @@ def test_integration_low_risk_allow_flow(risk_engine_facade: RiskEngineFacade, p
     assert isinstance(decision, PolicyDecision)
     assert decision.action == PolicyAction.ALLOW
     assert decision.is_approved is True
-    assert decision.final_prompt == prompt
     assert decision.rule_triggered in ("ALLOW_RULE", "RISK_SCORE_RULE", "SEVERITY_LEVEL_RULE")
 
 
@@ -95,14 +94,13 @@ def test_integration_medium_risk_warn_flow(risk_engine_facade: RiskEngineFacade,
 
     assert decision.action == PolicyAction.WARN
     assert decision.is_approved is True
-    assert decision.final_prompt == prompt
     assert decision.metadata.get("enforcement_status") == "WARNED"
 
 
 def test_integration_sanitization_flow(risk_engine_facade: RiskEngineFacade, policy_engine: PolicyEngine):
     """
     Test End-to-End PII / Credential Sanitization Scenario:
-    Prompt with PII and API keys -> RiskEngine evidence -> PolicyEngine SANITIZE decision & redaction.
+    Prompt with PII and API keys -> RiskEngine evidence -> PolicyEngine SANITIZE decision directive.
     """
     findings = [
         RiskEvidence(
@@ -131,10 +129,7 @@ def test_integration_sanitization_flow(risk_engine_facade: RiskEngineFacade, pol
     assert decision.action in (PolicyAction.SANITIZE, PolicyAction.BLOCK)
     if decision.action == PolicyAction.SANITIZE:
         assert decision.is_approved is True
-        assert decision.final_prompt is not None
-        assert "john.doe@corp.com" not in decision.final_prompt
-        assert "AKIA1234567890ABCDEF" not in decision.final_prompt
-        assert len(decision.applied_sanitizations) > 0
+        assert decision.metadata.get("enforcement_status") == "SANITIZE_REQUIRED"
 
 
 def test_integration_critical_jailbreak_block_flow(risk_engine_facade: RiskEngineFacade, policy_engine: PolicyEngine):
@@ -167,9 +162,9 @@ def test_integration_critical_jailbreak_block_flow(risk_engine_facade: RiskEngin
 
     assert decision.action == PolicyAction.BLOCK
     assert decision.is_approved is False
-    assert decision.final_prompt is None
     assert decision.rule_triggered in ("THREAT_RULE", "RISK_SCORE_RULE", "SEVERITY_LEVEL_RULE")
     assert decision.metadata.get("enforcement_status") == "BLOCKED"
+
 
 
 def test_integration_risk_context_bridging(risk_engine_facade: RiskEngineFacade):

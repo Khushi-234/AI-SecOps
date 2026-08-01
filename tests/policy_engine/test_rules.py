@@ -30,7 +30,6 @@ def test_allow_rule():
     assert decision.action == PolicyAction.ALLOW
     assert decision.is_approved is True
     assert decision.rule_triggered == "ALLOW_RULE"
-    assert decision.final_prompt == "Hello"
 
 
 # =============================================================================
@@ -42,30 +41,28 @@ def test_risk_score_rule_block():
     rule = RiskScoreRule()
     assert rule.rule_name == "RISK_SCORE_RULE"
 
-    # Score >= 90 -> BLOCK
-    ctx = RiskContext(request_id="req-score-block", original_prompt="Unsafe prompt", risk_score=0.95)
+    # Score >= 0.75 -> BLOCK
+    ctx = RiskContext(request_id="req-score-block", original_prompt="Unsafe prompt", risk_score=0.85)
     decision = rule.evaluate(ctx)
     assert decision is not None
     assert decision.action == PolicyAction.BLOCK
     assert decision.is_approved is False
-    assert decision.final_prompt is None
 
 
 def test_risk_score_rule_sanitize():
     rule = RiskScoreRule()
-    # 70 <= Score < 90 -> SANITIZE
-    ctx = RiskContext(request_id="req-score-san", original_prompt="Semi-unsafe prompt", risk_score=0.75)
+    # 0.40 <= Score < 0.75 -> SANITIZE
+    ctx = RiskContext(request_id="req-score-san", original_prompt="Semi-unsafe prompt", risk_score=0.50)
     decision = rule.evaluate(ctx)
     assert decision is not None
     assert decision.action == PolicyAction.SANITIZE
     assert decision.is_approved is True
-    assert decision.final_prompt == "Semi-unsafe prompt"
 
 
 def test_risk_score_rule_warn():
     rule = RiskScoreRule()
-    # 40 <= Score < 70 -> WARN
-    ctx = RiskContext(request_id="req-score-warn", original_prompt="Elevated prompt", risk_score=0.50)
+    # 0.25 <= Score < 0.40 -> WARN
+    ctx = RiskContext(request_id="req-score-warn", original_prompt="Elevated prompt", risk_score=0.30)
     decision = rule.evaluate(ctx)
     assert decision is not None
     assert decision.action == PolicyAction.WARN
@@ -74,12 +71,30 @@ def test_risk_score_rule_warn():
 
 def test_risk_score_rule_allow():
     rule = RiskScoreRule()
-    # Score < 40 -> ALLOW
-    ctx = RiskContext(request_id="req-score-allow", original_prompt="Safe prompt", risk_score=0.20)
+    # Score < 0.25 -> ALLOW
+    ctx = RiskContext(request_id="req-score-allow", original_prompt="Safe prompt", risk_score=0.10)
     decision = rule.evaluate(ctx)
     assert decision is not None
     assert decision.action == PolicyAction.ALLOW
     assert decision.is_approved is True
+
+
+def test_risk_score_rule_custom_thresholds():
+    from policy_engine.config import ThresholdConfig
+    custom_cfg = ThresholdConfig(warn_score_threshold=0.10, sanitize_score_threshold=0.30, block_score_threshold=0.50)
+    rule = RiskScoreRule(thresholds=custom_cfg)
+
+    # Score 0.40 is now SANITIZE with custom thresholds (instead of WARN)
+    ctx = RiskContext(request_id="req-custom-t", original_prompt="Prompt", risk_score=0.40)
+    decision = rule.evaluate(ctx)
+    assert decision is not None
+    assert decision.action == PolicyAction.SANITIZE
+
+    # Score 0.60 is now BLOCK with custom thresholds (instead of SANITIZE)
+    ctx_block = RiskContext(request_id="req-custom-blk", original_prompt="Prompt", risk_score=0.60)
+    dec_block = rule.evaluate(ctx_block)
+    assert dec_block is not None
+    assert dec_block.action == PolicyAction.BLOCK
 
 
 # =============================================================================
@@ -175,3 +190,18 @@ def test_threat_rule_matching():
         detected_threats=("benign_query",),
     )
     assert rule.evaluate(ctx_clean) is None
+
+
+def test_threat_rule_custom_critical_threats():
+    rule = ThreatRule(critical_threats=["custom_sql_injection"])
+    assert "custom_sql_injection" in rule.critical_threats
+
+    ctx_custom = RiskContext(
+        request_id="req-sql",
+        original_prompt="SQL attempt",
+        detected_threats=("custom_sql_injection",),
+    )
+    decision = rule.evaluate(ctx_custom)
+    assert decision is not None
+    assert decision.action == PolicyAction.BLOCK
+

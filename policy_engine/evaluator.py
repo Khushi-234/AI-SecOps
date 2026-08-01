@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from policy_engine.actions import ACTION_PRIORITY, PolicyAction
+from policy_engine.config import PolicyEngineConfig
 from policy_engine.context import RiskContext
 from policy_engine.logger import log_policy_decision
 from policy_engine.models import PolicyDecision
@@ -24,17 +25,27 @@ class PolicyEvaluator:
     Evaluates RiskContext against registered policy rules and resolves action priorities.
     """
 
-    def __init__(self, rules: Sequence[BasePolicyRule] | None = None) -> None:
-        """Initializes evaluator with given rules or default rule catalog."""
+    def __init__(
+        self,
+        rules: Sequence[BasePolicyRule] | None = None,
+        config: PolicyEngineConfig | None = None,
+    ) -> None:
+        """Initializes evaluator with given rules or default rule catalog configured by config."""
+        self._config = config or PolicyEngineConfig()
         if rules is not None:
             self._rules: list[BasePolicyRule] = list(rules)
         else:
             # Default Rule Order: ThreatRule -> RiskScoreRule -> SeverityRule
             self._rules = [
-                ThreatRule(),
-                RiskScoreRule(),
+                ThreatRule(critical_threats=self._config.critical_threats),
+                RiskScoreRule(thresholds=self._config.thresholds),
                 SeverityRule(),
             ]
+
+    @property
+    def config(self) -> PolicyEngineConfig:
+        """Returns active PolicyEngineConfig."""
+        return self._config
 
     @property
     def rules(self) -> list[BasePolicyRule]:
@@ -58,18 +69,36 @@ class PolicyEvaluator:
             if decision is not None:
                 decisions.append(decision)
 
+        matched_rule_names = tuple(d.rule_triggered for d in decisions)
+
         if not decisions:
-            # Default fallback if no rule triggered
+            # Fallback action configured in PolicyEngineConfig (default WARN)
+            fallback_action = self._config.default_action
+            is_appr = fallback_action != PolicyAction.BLOCK
             resolved = PolicyDecision(
                 request_id=context.request_id,
-                action=PolicyAction.ALLOW,
-                reason=f"Default ALLOW decision for request {context.request_id}.",
+                action=fallback_action,
+                is_approved=is_appr,
+                reason=f"Default fallback ({fallback_action.value}) decision for request {context.request_id}.",
                 risk_score=context.risk_score,
-                rule_triggered="DEFAULT_ALLOW",
+                rule_triggered="DEFAULT_FALLBACK",
+                matched_rules=(),
             )
         else:
             # Resolve priority: Highest action priority (BLOCK > SANITIZE > WARN > ALLOW)
-            resolved = self._resolve_priority(decisions)
+            raw_resolved = self._resolve_priority(decisions)
+            # Reconstruct with matched_rules populated
+            resolved = PolicyDecision(
+                request_id=raw_resolved.request_id or context.request_id,
+                action=raw_resolved.action,
+                is_approved=raw_resolved.is_approved,
+                reason=raw_resolved.reason,
+                risk_score=raw_resolved.risk_score,
+                rule_triggered=raw_resolved.rule_triggered,
+                timestamp=raw_resolved.timestamp,
+                metadata=raw_resolved.metadata,
+                matched_rules=matched_rule_names,
+            )
 
         # Log structured audit telemetry
         action_str = (
@@ -116,3 +145,4 @@ class PolicyEvaluator:
             except ValueError:
                 return 1
         return ACTION_PRIORITY.get(action, 1)
+

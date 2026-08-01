@@ -76,13 +76,8 @@ class PolicyConfigurationError(PolicyEngineError):
     pass
 
 
-class SanitizationError(PolicyEngineError):
-    """Raised when a prompt sanitization operation fails unexpectedly."""
-
-    pass
-
-
 class PolicyExecutionError(PolicyEngineError):
     """Raised when rule evaluation or decision mapping encounters an internal runtime failure."""
 
     pass
+

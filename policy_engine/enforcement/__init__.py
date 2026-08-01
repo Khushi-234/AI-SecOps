@@ -7,14 +7,13 @@ Dispatches decided PolicyActions (ALLOW, WARN, SANITIZE, BLOCK) to dedicated act
 from __future__ import annotations
 
 from policy_engine.actions import PolicyAction
-from policy_engine.config import SanitizationConfig
 from policy_engine.context import RiskContext
 from policy_engine.enforcement.allow import AllowEnforcer
 from policy_engine.enforcement.block import BlockEnforcer
 from policy_engine.enforcement.sanitize import SanitizeEnforcer
 from policy_engine.enforcement.warn import WarnEnforcer
 from policy_engine.models import PolicyDecision
-from policy_engine.sanitizers.pipeline import SanitizationPipeline
+
 
 
 class EnforcementLayer:
@@ -22,16 +21,10 @@ class EnforcementLayer:
     Enforcement Layer dispatcher delegating decided PolicyDecision execution.
     """
 
-    def __init__(
-        self,
-        sanitization_pipeline: SanitizationPipeline | None = None,
-        sanitization_config: SanitizationConfig | None = None,
-    ) -> None:
+    def __init__(self) -> None:
         self._allow_enforcer = AllowEnforcer()
         self._warn_enforcer = WarnEnforcer()
-        self._sanitize_enforcer = SanitizeEnforcer(
-            pipeline=sanitization_pipeline, config=sanitization_config
-        )
+        self._sanitize_enforcer = SanitizeEnforcer()
         self._block_enforcer = BlockEnforcer()
 
     def enforce(
@@ -70,3 +63,4 @@ __all__ = [
     "SanitizeEnforcer",
     "BlockEnforcer",
 ]
+

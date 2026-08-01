@@ -35,23 +35,6 @@ class BaseStringEnum(str, Enum):
         )
 
 
-class SanitizationType(BaseStringEnum):
-    """
-    Categorizes the specific type of prompt sanitization performed.
-
-    Members:
-        PII_REDACTION: Redaction of Personally Identifiable Information.
-        SECRET_MASKING: Masking of API keys, tokens, and sensitive secrets.
-        INJECTION_STRIPPING: Removal of prompt injection delimiters and system override phrases.
-        TAG_REMOVAL: Removal of unsafe HTML/XML control tags.
-    """
-
-    PII_REDACTION = "PII_REDACTION"
-    SECRET_MASKING = "SECRET_MASKING"
-    INJECTION_STRIPPING = "INJECTION_STRIPPING"
-    TAG_REMOVAL = "TAG_REMOVAL"
-
-
 def __getattr__(name: str) -> Any:
     if name in ("ACTION_PRIORITY", "PolicyAction"):
         from policy_engine import actions
@@ -59,4 +42,5 @@ def __getattr__(name: str) -> Any:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["SanitizationType", "ACTION_PRIORITY", "PolicyAction", "BaseStringEnum"]
+__all__ = ["ACTION_PRIORITY", "PolicyAction", "BaseStringEnum"]
+

@@ -22,7 +22,6 @@ from policy_engine.exceptions import (
 )
 from policy_engine.models import PolicyDecision
 from policy_engine.rules.base_rule import BasePolicyRule
-from policy_engine.sanitizers.pipeline import SanitizationPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -41,17 +40,13 @@ class PolicyEngine:
         evaluator: PolicyEvaluator | None = None,
         enforcer: EnforcementLayer | None = None,
         rules: Sequence[BasePolicyRule] | None = None,
-        sanitization_pipeline: SanitizationPipeline | None = None,
     ) -> None:
         """
         Initializes PolicyEngine with configuration, evaluator, and enforcement layer.
         """
         self._config = config or PolicyEngineConfig()
-        self._evaluator = evaluator or PolicyEvaluator(rules=rules)
-        self._enforcer = enforcer or EnforcementLayer(
-            sanitization_pipeline=sanitization_pipeline,
-            sanitization_config=self._config.sanitization,
-        )
+        self._evaluator = evaluator or PolicyEvaluator(rules=rules, config=self._config)
+        self._enforcer = enforcer or EnforcementLayer()
 
     @property
     def config(self) -> PolicyEngineConfig:
@@ -94,7 +89,7 @@ class PolicyEngine:
             # 1. Decision Layer: Evaluate rules and resolve action priority
             raw_decision = self._evaluator.evaluate(context)
 
-            # 2. Enforcement Layer: Execute decided action (Allow, Warn, Sanitize, Block)
+            # 2. Enforcement Layer: Execute decided action status & logging
             final_decision = self._enforcer.enforce(raw_decision, context)
 
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
@@ -109,13 +104,12 @@ class PolicyEngine:
                 request_id=final_decision.request_id or context.request_id,
                 action=final_decision.action,
                 is_approved=final_decision.is_approved,
-                final_prompt=final_decision.final_prompt,
-                applied_sanitizations=final_decision.applied_sanitizations,
                 reason=final_decision.reason,
                 risk_score=final_decision.risk_score,
                 rule_triggered=final_decision.rule_triggered,
                 timestamp=final_decision.timestamp,
                 metadata=meta,
+                matched_rules=final_decision.matched_rules,
             )
 
         except Exception as exc:
@@ -123,12 +117,11 @@ class PolicyEngine:
             if self._config.strict_fail_secure:
                 elapsed_ms = (time.perf_counter() - start_time) * 1000.0
                 return PolicyDecision(
-                    request_id=context.request_id,
+                    request_id=context.request_id if hasattr(context, "request_id") else "",
                     action=PolicyAction.BLOCK,
                     is_approved=False,
-                    final_prompt=None,
                     reason=f"Fail-secure enforcement BLOCKED request due to error: {exc}",
-                    risk_score=context.risk_score,
+                    risk_score=getattr(context, "risk_score", 0.0),
                     rule_triggered="FAIL_SECURE_ERROR",
                     metadata={"error": str(exc), "execution_time_ms": elapsed_ms},
                 )
@@ -155,3 +148,4 @@ class PolicyEngine:
             metadata=metadata,
         )
         return self.evaluate(context)
+

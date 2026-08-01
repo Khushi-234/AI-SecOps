@@ -7,28 +7,22 @@ Public API surface for security policy decision evaluation and action enforcemen
 from policy_engine.actions import ACTION_PRIORITY, PolicyAction
 from policy_engine.config import (
     PolicyEngineConfig,
-    SanitizationConfig,
     ThresholdConfig,
 )
 from policy_engine.context import RiskContext
 from policy_engine.engine import PolicyEngine
 from policy_engine.enforcement import EnforcementLayer
-from policy_engine.enums import SanitizationType
 from policy_engine.evaluator import PolicyEvaluator
 from policy_engine.exceptions import (
     InvalidPolicyInputError,
     PolicyConfigurationError,
     PolicyEngineError,
     PolicyExecutionError,
-    SanitizationError,
 )
 from policy_engine.logger import get_policy_logger, log_policy_decision
-from policy_engine.models import (
-    PolicyDecision,
-    SanitizationEdit,
-    SanitizationResult,
-)
+from policy_engine.models import PolicyDecision
 from policy_engine.rules import (
+    AllowRule,
     BasePolicyRule,
     RiskScoreRule,
     SeverityRule,
@@ -46,20 +40,17 @@ __all__ = [
     # Context & Models
     "RiskContext",
     "PolicyDecision",
-    "SanitizationEdit",
-    "SanitizationResult",
     # Actions & Enums
     "PolicyAction",
-    "SanitizationType",
     # Rules
     "BasePolicyRule",
+    "ThreatRule",
     "RiskScoreRule",
     "SeverityRule",
-    "ThreatRule",
+    "AllowRule",
     # Configuration
     "PolicyEngineConfig",
     "ThresholdConfig",
-    "SanitizationConfig",
     # Logger
     "get_policy_logger",
     "log_policy_decision",
@@ -67,6 +58,6 @@ __all__ = [
     "PolicyEngineError",
     "InvalidPolicyInputError",
     "PolicyConfigurationError",
-    "SanitizationError",
     "PolicyExecutionError",
 ]
+

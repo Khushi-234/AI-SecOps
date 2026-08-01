@@ -8,7 +8,9 @@ import pytest
 
 import policy_engine.enums as enums_module
 from policy_engine.actions import ACTION_PRIORITY, PolicyAction
-from policy_engine.enums import BaseStringEnum, SanitizationType
+from policy_engine.enums import BaseStringEnum
+
+
 
 
 class DummyEnum(BaseStringEnum):
@@ -32,13 +34,6 @@ def test_base_string_enum_from_string():
 
     with pytest.raises(ValueError, match="Invalid DummyEnum value"):
         DummyEnum.from_string("UNKNOWN")
-
-
-def test_sanitization_type_members():
-    assert SanitizationType.PII_REDACTION.value == "PII_REDACTION"
-    assert SanitizationType.SECRET_MASKING.value == "SECRET_MASKING"
-    assert SanitizationType.INJECTION_STRIPPING.value == "INJECTION_STRIPPING"
-    assert SanitizationType.TAG_REMOVAL.value == "TAG_REMOVAL"
 
 
 def test_enums_module_getattr_reexports():

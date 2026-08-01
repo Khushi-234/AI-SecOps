@@ -28,10 +28,11 @@ class WarnEnforcer:
             request_id=decision.request_id or context.request_id,
             action=PolicyAction.WARN,
             is_approved=True,
-            final_prompt=context.original_prompt,
             reason=decision.reason,
             risk_score=decision.risk_score,
             rule_triggered=decision.rule_triggered,
             timestamp=decision.timestamp,
             metadata=meta,
+            matched_rules=decision.matched_rules,
         )
+

@@ -21,10 +21,11 @@ class AllowEnforcer:
             request_id=decision.request_id or context.request_id,
             action=PolicyAction.ALLOW,
             is_approved=True,
-            final_prompt=context.original_prompt,
             reason=decision.reason,
             risk_score=decision.risk_score,
             rule_triggered=decision.rule_triggered,
             timestamp=decision.timestamp,
             metadata=decision.metadata,
+            matched_rules=decision.matched_rules,
         )
+

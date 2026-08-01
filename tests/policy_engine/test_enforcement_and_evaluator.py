@@ -32,7 +32,6 @@ def test_allow_enforcer():
 
     assert res.action == PolicyAction.ALLOW
     assert res.is_approved is True
-    assert res.final_prompt == "Original Prompt text"
 
 
 def test_warn_enforcer():
@@ -44,7 +43,6 @@ def test_warn_enforcer():
 
     assert res.action == PolicyAction.WARN
     assert res.is_approved is True
-    assert res.final_prompt == "Prompt under monitoring"
     assert res.metadata.get("enforcement_status") == "WARNED"
 
 
@@ -57,10 +55,7 @@ def test_sanitize_enforcer():
 
     assert res.action == PolicyAction.SANITIZE
     assert res.is_approved is True
-    assert res.final_prompt is not None
-    assert "user@example.com" not in res.final_prompt
-    assert len(res.applied_sanitizations) > 0
-    assert "sanitization_processing_time_ms" in res.metadata
+    assert res.metadata.get("enforcement_status") == "SANITIZE_REQUIRED"
 
 
 def test_block_enforcer():
@@ -72,7 +67,6 @@ def test_block_enforcer():
 
     assert res.action == PolicyAction.BLOCK
     assert res.is_approved is False
-    assert res.final_prompt is None
     assert res.metadata.get("enforcement_status") == "BLOCKED"
 
 
@@ -143,6 +137,7 @@ def test_evaluator_priority_resolution():
     decision = evaluator.evaluate(ctx)
     assert decision.action == PolicyAction.BLOCK
     assert decision.rule_triggered == "RULE_BLOCK"
+    assert "RULE_BLOCK" in decision.matched_rules
 
 
 def test_evaluator_default_fallback():
@@ -150,8 +145,8 @@ def test_evaluator_default_fallback():
     ctx = RiskContext(request_id="req-empty-rules", original_prompt="Prompt")
 
     decision = evaluator.evaluate(ctx)
-    assert decision.action == PolicyAction.ALLOW
-    assert decision.rule_triggered == "DEFAULT_ALLOW"
+    assert decision.action == PolicyAction.WARN
+    assert decision.rule_triggered == "DEFAULT_FALLBACK"
 
 
 def test_evaluator_get_action_priority():
@@ -160,3 +155,4 @@ def test_evaluator_get_action_priority():
     assert PolicyEvaluator._get_action_priority("WARN") == 2
     assert PolicyEvaluator._get_action_priority("ALLOW") == 1
     assert PolicyEvaluator._get_action_priority("INVALID_ACTION") == 1
+

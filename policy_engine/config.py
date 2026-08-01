@@ -47,24 +47,16 @@ class ThresholdConfig:
             )
 
 
-@dataclass(slots=True, frozen=True)
-class SanitizationConfig:
-    """
-    Settings governing prompt sanitization behavior and placeholders.
-
-    Attributes:
-        enable_pii_sanitization: Flag to redact PII data (default: True).
-        enable_secret_masking: Flag to redact credentials & tokens (default: True).
-        enable_injection_stripping: Flag to strip prompt injection tokens (default: True).
-        pii_placeholder: Masking string for PII findings.
-        secret_placeholder: Masking string for secrets findings.
-    """
-
-    enable_pii_sanitization: bool = True
-    enable_secret_masking: bool = True
-    enable_injection_stripping: bool = True
-    pii_placeholder: str = "[REDACTED_PII]"
-    secret_placeholder: str = "[REDACTED_SECRET]"
+DEFAULT_CRITICAL_THREATS: tuple[str, ...] = (
+    "credential_leak",
+    "secret_exposure",
+    "system_prompt_extraction",
+    "severe_jailbreak",
+    "prompt_injection",
+    "jailbreak",
+    "secret_leak",
+    "pii_leak",
+)
 
 
 @dataclass(slots=True, frozen=True)
@@ -74,15 +66,20 @@ class PolicyEngineConfig:
 
     Attributes:
         thresholds: Risk score boundary configuration.
-        sanitization: Sanitization pipeline settings.
+        critical_threats: Tuple of critical threat names that trigger immediate BLOCK decision.
         strict_fail_secure: If True, unhandled errors default to BLOCK (default: True).
-        default_action: Fallback action when no rules match (default: PolicyAction.ALLOW).
+        default_action: Fallback action when no rules match (default: PolicyAction.WARN).
     """
 
     thresholds: ThresholdConfig = field(default_factory=ThresholdConfig)
-    sanitization: SanitizationConfig = field(default_factory=SanitizationConfig)
+    critical_threats: tuple[str, ...] = field(default_factory=lambda: DEFAULT_CRITICAL_THREATS)
     strict_fail_secure: bool = True
-    default_action: PolicyAction = PolicyAction.ALLOW
+    default_action: PolicyAction = PolicyAction.WARN
+
+    def __post_init__(self) -> None:
+        """Converts critical_threats list to immutable tuple if needed."""
+        if not isinstance(self.critical_threats, tuple):
+            object.__setattr__(self, "critical_threats", tuple(self.critical_threats))
 
     def to_dict(self) -> dict[str, Any]:
         """Serializes configuration to dictionary."""
@@ -92,13 +89,12 @@ class PolicyEngineConfig:
                 "sanitize_score_threshold": self.thresholds.sanitize_score_threshold,
                 "warn_score_threshold": self.thresholds.warn_score_threshold,
             },
-            "sanitization": {
-                "enable_pii_sanitization": self.sanitization.enable_pii_sanitization,
-                "enable_secret_masking": self.sanitization.enable_secret_masking,
-                "enable_injection_stripping": self.sanitization.enable_injection_stripping,
-                "pii_placeholder": self.sanitization.pii_placeholder,
-                "secret_placeholder": self.sanitization.secret_placeholder,
-            },
+            "critical_threats": list(self.critical_threats),
             "strict_fail_secure": self.strict_fail_secure,
-            "default_action": self.default_action.value,
+            "default_action": (
+                self.default_action.value
+                if hasattr(self.default_action, "value")
+                else str(self.default_action)
+            ),
         }
+

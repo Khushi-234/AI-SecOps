@@ -24,9 +24,9 @@ class AllowRule(BasePolicyRule):
             request_id=context.request_id,
             action=PolicyAction.ALLOW,
             is_approved=True,
-            final_prompt=context.original_prompt,
             reason=f"Request approved with ALLOW action (Composite score: {context.composite_score:.2f}).",
             risk_score=context.risk_score,
             rule_triggered=self.rule_name,
             metadata={"rule": self.rule_name, "score": context.composite_score},
         )
+

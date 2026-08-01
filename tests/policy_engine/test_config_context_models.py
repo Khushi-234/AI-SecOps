@@ -4,17 +4,18 @@ Unit tests for config, context, and models modules in policy_engine.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
 from enum import Enum
 from typing import Any
 import pytest
 
 from policy_engine.actions import PolicyAction
-from policy_engine.config import PolicyEngineConfig, SanitizationConfig, ThresholdConfig
+from policy_engine.config import PolicyEngineConfig, ThresholdConfig
 from policy_engine.context import RiskContext
-from policy_engine.enums import SanitizationType
 from policy_engine.exceptions import InvalidPolicyInputError, PolicyConfigurationError
-from policy_engine.models import PolicyDecision, SanitizationEdit, SanitizationResult
+from policy_engine.models import PolicyDecision
+
 
 
 # =============================================================================
@@ -47,9 +48,10 @@ def test_policy_engine_config_to_dict():
     d = cfg.to_dict()
 
     assert d["thresholds"]["block_score_threshold"] == 0.75
-    assert d["sanitization"]["enable_pii_sanitization"] is True
+    assert "critical_threats" in d
+    assert "credential_leak" in d["critical_threats"]
     assert d["strict_fail_secure"] is True
-    assert d["default_action"] == "ALLOW"
+    assert d["default_action"] == "WARN"
 
 
 # =============================================================================
@@ -141,8 +143,6 @@ class DummyRecommendation:
     action: Any = DummyEnumAction.BLOCK
 
 
-from dataclasses import dataclass, field
-
 @dataclass
 class DummyRiskResponse:
     assessment: DummyAssessment = field(default_factory=DummyAssessment)
@@ -199,46 +199,6 @@ def test_risk_context_from_risk_response_unsupported():
 # =============================================================================
 
 
-def test_sanitization_edit_validation_and_to_dict():
-    with pytest.raises(InvalidPolicyInputError, match="Invalid character range"):
-        SanitizationEdit("e1", SanitizationType.PII_REDACTION, "abc", "XXX", -1, 5)
-
-    with pytest.raises(InvalidPolicyInputError, match="Invalid character range"):
-        SanitizationEdit("e2", SanitizationType.PII_REDACTION, "abc", "XXX", 10, 5)
-
-    edit = SanitizationEdit(
-        edit_id="e3",
-        sanitization_type=SanitizationType.SECRET_MASKING,
-        original_text="secret",
-        replacement_text="[REDACTED]",
-        start_char=0,
-        end_char=6,
-    )
-    assert edit.to_dict() == {
-        "edit_id": "e3",
-        "sanitization_type": "SECRET_MASKING",
-        "original_text": "secret",
-        "replacement_text": "[REDACTED]",
-        "start_char": 0,
-        "end_char": 6,
-    }
-
-
-def test_sanitization_result_validation_and_to_dict():
-    with pytest.raises(InvalidPolicyInputError, match="processing_time_ms cannot be negative"):
-        SanitizationResult("clean", (), -5.0)
-
-    edit = SanitizationEdit("e1", "PII", "a@b.com", "[PII]", 0, 7)
-    res = SanitizationResult("clean", (edit,), 12.5)  # tuple passed
-
-    assert isinstance(res.edits, tuple)
-    assert res.to_dict() == {
-        "sanitized_prompt": "clean",
-        "edits": [edit.to_dict()],
-        "processing_time_ms": 12.5,
-    }
-
-
 def test_policy_decision_validation_and_to_dict():
     # String action parsing & BLOCK enforcement
     dec_block = PolicyDecision(
@@ -246,18 +206,19 @@ def test_policy_decision_validation_and_to_dict():
         reason="Jailbreak detected",
         risk_score=0.95,
         rule_triggered="THREAT_RULE",
-        final_prompt="Unsafe prompt text",  # Should be overridden to None
         request_id="req-blk",
+        matched_rules=("THREAT_RULE", "RISK_SCORE_RULE"),
     )
 
     assert dec_block.action == PolicyAction.BLOCK
     assert dec_block.is_approved is False
-    assert dec_block.final_prompt is None
+    assert dec_block.matched_rules == ("THREAT_RULE", "RISK_SCORE_RULE")
 
     d = dec_block.to_dict()
     assert d["request_id"] == "req-blk"
     assert d["action"] == "BLOCK"
     assert d["is_approved"] is False
-    assert d["final_prompt"] is None
     assert d["rule_triggered"] == "THREAT_RULE"
+    assert d["matched_rules"] == ["THREAT_RULE", "RISK_SCORE_RULE"]
     assert "timestamp" in d
+

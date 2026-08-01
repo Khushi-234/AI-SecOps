@@ -28,10 +28,11 @@ class BlockEnforcer:
             request_id=decision.request_id or context.request_id,
             action=PolicyAction.BLOCK,
             is_approved=False,
-            final_prompt=None,
             reason=decision.reason,
             risk_score=decision.risk_score,
             rule_triggered=decision.rule_triggered,
             timestamp=decision.timestamp,
             metadata=meta,
+            matched_rules=decision.matched_rules,
         )
+
