@@ -9,19 +9,23 @@ Tests all public behavior of ConfidenceCalculator:
     - String strategy resolution ("WEIGHTED", "CONSENSUS", "HISTORICAL", "HYBRID")
     - Boundary metric handling (0.0 floor, 1.0 ceiling, precision rounding)
     - Historical precision parameter overrides
-    - Deterministic output repeatability
+    - Deterministic output repeatability with fixed timestamps
     - Fail-secure error propagation (InvalidRiskInputError, ConfidenceCalculationError)
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
 import pytest
 
 from risk_engine.confidence import ConfidenceCalculator
 from risk_engine.enums import ConfidenceStrategy
 from risk_engine.exceptions import ConfidenceCalculationError, InvalidRiskInputError
 from risk_engine.models import RiskEvidence
+
+#: Deterministic UTC timestamp for unit test fixtures
+FIXED_TIMESTAMP: datetime = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
 
 # =============================================================================
@@ -37,7 +41,7 @@ def calculator() -> ConfidenceCalculator:
 
 @pytest.fixture
 def sample_evidence_list() -> list[RiskEvidence]:
-    """Provide a list of valid, diverse RiskEvidence items for testing."""
+    """Provide a list of valid, diverse RiskEvidence items with deterministic timestamps."""
     return [
         RiskEvidence(
             evidence_id="ev-1",
@@ -48,7 +52,7 @@ def sample_evidence_list() -> list[RiskEvidence]:
             confidence=0.95,
             risk_score=0.90,
             description="High confidence jailbreak pattern",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=FIXED_TIMESTAMP,
         ),
         RiskEvidence(
             evidence_id="ev-2",
@@ -59,7 +63,7 @@ def sample_evidence_list() -> list[RiskEvidence]:
             confidence=0.85,
             risk_score=0.70,
             description="Medium-high confidence length validation error",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=FIXED_TIMESTAMP,
         ),
     ]
 
@@ -69,25 +73,29 @@ def sample_evidence_list() -> list[RiskEvidence]:
 # =============================================================================
 
 
-def test_calculate_empty_evidence_raises_error(calculator: ConfidenceCalculator):
-    """Verify calling calculate() with an empty sequence raises an exception."""
+def test_calculate_empty_evidence_raises_invalid_input(calculator: ConfidenceCalculator):
+    """Verify calling calculate() with an empty sequence raises InvalidRiskInputError or ConfidenceCalculationError."""
     # Arrange & Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises((InvalidRiskInputError, ConfidenceCalculationError)) as exc_info:
         calculator.calculate([])
+    assert exc_info.value is not None
 
 
-def test_calculate_none_evidence_raises_error(calculator: ConfidenceCalculator):
-    """Verify calling calculate() with None raises an exception."""
+def test_calculate_none_evidence_raises_invalid_input(calculator: ConfidenceCalculator):
+    """Verify calling calculate() with None raises InvalidRiskInputError or ConfidenceCalculationError."""
     # Arrange & Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises((InvalidRiskInputError, ConfidenceCalculationError)) as exc_info:
         calculator.calculate(None)  # type: ignore[arg-type]
+    assert exc_info.value is not None
 
 
-def test_calculate_non_sequence_raises_error(calculator: ConfidenceCalculator):
-    """Verify passing a non-sequence object raises an exception."""
+def test_calculate_non_sequence_raises_invalid_input(calculator: ConfidenceCalculator):
+    """Verify passing a non-sequence object raises InvalidRiskInputError, ConfidenceCalculationError, or TypeError."""
     # Arrange & Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises((InvalidRiskInputError, ConfidenceCalculationError, TypeError)) as exc_info:
         calculator.calculate(12345)  # type: ignore[arg-type]
+    assert exc_info.value is not None
+
 
 
 # =============================================================================
@@ -107,6 +115,7 @@ def test_calculate_single_evidence_item(calculator: ConfidenceCalculator):
         confidence=0.80,
         risk_score=0.50,
         description="Single item test",
+        timestamp=FIXED_TIMESTAMP,
     )
 
     # Act
@@ -142,6 +151,7 @@ def test_calculate_low_confidence_scenario(calculator: ConfidenceCalculator):
             confidence=0.10,
             risk_score=0.20,
             description="Low confidence finding 1",
+            timestamp=FIXED_TIMESTAMP,
         ),
         RiskEvidence(
             evidence_id="ev-low-2",
@@ -152,6 +162,7 @@ def test_calculate_low_confidence_scenario(calculator: ConfidenceCalculator):
             confidence=0.20,
             risk_score=0.15,
             description="Low confidence finding 2",
+            timestamp=FIXED_TIMESTAMP,
         ),
     ]
 
@@ -175,6 +186,7 @@ def test_calculate_high_confidence_scenario(calculator: ConfidenceCalculator):
             confidence=0.98,
             risk_score=0.95,
             description="High confidence finding 1",
+            timestamp=FIXED_TIMESTAMP,
         ),
         RiskEvidence(
             evidence_id="ev-high-2",
@@ -185,6 +197,7 @@ def test_calculate_high_confidence_scenario(calculator: ConfidenceCalculator):
             confidence=0.95,
             risk_score=0.90,
             description="High confidence finding 2",
+            timestamp=FIXED_TIMESTAMP,
         ),
     ]
 
@@ -259,6 +272,7 @@ def test_calculate_min_confidence_boundary(calculator: ConfidenceCalculator):
             confidence=0.0,
             risk_score=0.0,
             description="Min confidence item",
+            timestamp=FIXED_TIMESTAMP,
         )
     ]
 
@@ -282,6 +296,7 @@ def test_calculate_max_confidence_boundary(calculator: ConfidenceCalculator):
             confidence=1.0,
             risk_score=1.0,
             description="Max confidence item",
+            timestamp=FIXED_TIMESTAMP,
         )
     ]
 
@@ -324,25 +339,27 @@ def test_calculate_output_rounding_precision(
 # =============================================================================
 
 
-def test_calculate_invalid_item_type_in_sequence_raises_error(
+def test_calculate_invalid_item_type_in_sequence_raises_invalid_input(
     calculator: ConfidenceCalculator,
 ):
-    """Verify a sequence containing non-RiskEvidence elements raises an exception."""
+    """Verify a sequence containing non-RiskEvidence elements raises InvalidRiskInputError or ConfidenceCalculationError."""
     # Arrange
     invalid_sequence = ["not_an_evidence_object"]
 
     # Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises((InvalidRiskInputError, ConfidenceCalculationError)) as exc_info:
         calculator.calculate(invalid_sequence)  # type: ignore[arg-type]
+    assert exc_info.value is not None
 
 
-def test_calculate_invalid_strategy_string_raises_error(
+def test_calculate_invalid_strategy_string_raises_confidence_error(
     calculator: ConfidenceCalculator, sample_evidence_list: list[RiskEvidence]
 ):
-    """Verify an unrecognized strategy string raises an exception."""
+    """Verify an unrecognized strategy string raises ConfidenceCalculationError."""
     # Act & Assert
-    with pytest.raises(Exception):
+    with pytest.raises((ConfidenceCalculationError, InvalidRiskInputError, ValueError)) as exc_info:
         calculator.calculate(sample_evidence_list, strategy="INVALID_STRATEGY")
+    assert exc_info.value is not None
 
 
 # =============================================================================
