@@ -1,32 +1,30 @@
 """
-Prompt Hardener Module for AI-SecOps Framework.
+Prompt Hardener Module for AI-SecOps Framework v1.0.
 
-Transforms unsafe or high-risk prompts into safer LLM-ready prompts.
+Exposes only public architectural components required by downstream execution layers.
 """
 
-from prompt_hardener.config import HardenerConfig, DEFAULT_HARDENER_CONFIG
-from prompt_hardener.enums import HardeningAction, SanitizationType
+from prompt_hardener.config import HardenerConfig
+from prompt_hardener.enums import HardeningAction, HardeningConstraintType
 from prompt_hardener.exceptions import (
     HardeningError,
-    SanitizationError,
     RuleExecutionError,
+    InjectionError,
     InvalidPromptError,
     ConfigurationError,
 )
 from prompt_hardener.hardener import PromptHardener
-from prompt_hardener.models import HardeningResult, SanitizationResult
+from prompt_hardener.models import HardeningResult
 
 __all__ = [
     "PromptHardener",
     "HardenerConfig",
-    "DEFAULT_HARDENER_CONFIG",
-    "HardeningAction",
-    "SanitizationType",
     "HardeningResult",
-    "SanitizationResult",
+    "HardeningAction",
+    "HardeningConstraintType",
     "HardeningError",
-    "SanitizationError",
     "RuleExecutionError",
+    "InjectionError",
     "InvalidPromptError",
     "ConfigurationError",
 ]

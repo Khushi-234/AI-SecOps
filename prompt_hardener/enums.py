@@ -1,7 +1,5 @@
 """
 Enumerations for the Prompt Hardener module.
-
-Defines canonical actions and sanitization types for transforming user prompts.
 """
 
 from __future__ import annotations
@@ -38,7 +36,7 @@ class BaseStringEnum(str, Enum):
 class HardeningAction(BaseStringEnum):
     """
     Actions supported by the Prompt Hardener.
-    Matches PolicyAction values.
+    Matches PolicyAction values emitted by Policy Engine.
     """
 
     ALLOW = "ALLOW"
@@ -47,15 +45,16 @@ class HardeningAction(BaseStringEnum):
     BLOCK = "BLOCK"
 
 
-class SanitizationType(BaseStringEnum):
+class HardeningConstraintType(BaseStringEnum):
     """
-    Categories of sanitization performed by prompt sanitizers.
+    Categories of security constraints injected into prompts.
     """
 
-    INJECTION = "INJECTION"
-    SECRET = "SECRET"
-    PII = "PII"
-    RULE_CONSTRAINT = "RULE_CONSTRAINT"
+    PROMPT_INJECTION = "PROMPT_INJECTION"
+    SECRET_LEAK = "SECRET_LEAK"
+    PII_LEAK = "PII_LEAK"
+    SYSTEM_PROMPT = "SYSTEM_PROMPT"
+    TOOL_USAGE = "TOOL_USAGE"
 
 
-__all__ = ["BaseStringEnum", "HardeningAction", "SanitizationType"]
+__all__ = ["BaseStringEnum", "HardeningAction", "HardeningConstraintType"]

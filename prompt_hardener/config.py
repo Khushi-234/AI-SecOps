@@ -13,16 +13,13 @@ from prompt_hardener.exceptions import ConfigurationError
 @dataclass(slots=True, frozen=True)
 class HardenerConfig:
     """
-    Configuration settings for prompt hardening, sanitizers, and rule evaluation.
+    Configuration settings for prompt hardening, rule evaluation, and injectors.
     """
 
     max_prompt_length: int = 10000
-    enabled_sanitizers: tuple[str, ...] = ("injection", "secret", "pii")
-    secret_mask_token: str = "[REDACTED]"
-    pii_mask_token: str = "[REDACTED]"
-    email_mask_token: str = "[REDACTED]"
-    phone_mask_token: str = "[REDACTED]"
-    sanitize_on_warn: bool = True
+    inject_system_defenses: bool = True
+    inject_security_constraints: bool = True
+    inject_defensive_instructions: bool = True
     append_constraints: bool = True
     raise_on_error: bool = False
     metadata: Mapping[str, Any] = field(default_factory=dict)
@@ -34,21 +31,13 @@ class HardenerConfig:
                 f"max_prompt_length must be positive, got {self.max_prompt_length}"
             )
 
-        if not isinstance(self.enabled_sanitizers, tuple):
-            object.__setattr__(
-                self, "enabled_sanitizers", tuple(self.enabled_sanitizers)
-            )
-
     def to_dict(self) -> dict[str, Any]:
         """Serializes configuration to dictionary."""
         return {
             "max_prompt_length": self.max_prompt_length,
-            "enabled_sanitizers": list(self.enabled_sanitizers),
-            "secret_mask_token": self.secret_mask_token,
-            "pii_mask_token": self.pii_mask_token,
-            "email_mask_token": self.email_mask_token,
-            "phone_mask_token": self.phone_mask_token,
-            "sanitize_on_warn": self.sanitize_on_warn,
+            "inject_system_defenses": self.inject_system_defenses,
+            "inject_security_constraints": self.inject_security_constraints,
+            "inject_defensive_instructions": self.inject_defensive_instructions,
             "append_constraints": self.append_constraints,
             "raise_on_error": self.raise_on_error,
             "metadata": dict(self.metadata),
