@@ -48,6 +48,8 @@ class SanitizationType(BaseStringEnum):
     PII = "PII"
     PROMPT_LEAK = "PROMPT_LEAK"
     TOXIC_CONTENT = "TOXIC_CONTENT"
+    UNSAFE_CODE = "UNSAFE_CODE"
+
 
 
 class OutputAction(BaseStringEnum):
@@ -61,4 +63,48 @@ class OutputAction(BaseStringEnum):
     WARN = "WARN"
 
 
-__all__ = ["BaseStringEnum", "SanitizationType", "OutputAction"]
+class PromptLeakMode(BaseStringEnum):
+
+    """
+    Sanitization strategies for handling detected system prompt leaks.
+    """
+
+    MASK = "MASK"
+    REMOVE = "REMOVE"
+    REPLACE = "REPLACE"
+    BLOCK = "BLOCK"
+
+
+class FindingType(BaseStringEnum):
+    """
+    Security finding categories for Output Guard detectors.
+    """
+
+    SECRET = "SECRET"
+    PROMPT_LEAK = "PROMPT_LEAK"
+    PII = "PII"
+    TOXIC_CONTENT = "TOXIC_CONTENT"
+    UNSAFE_CODE = "UNSAFE_CODE"
+    POLICY_VIOLATION = "POLICY_VIOLATION"
+
+
+class OutputSeverity(BaseStringEnum):
+    """
+    Severity rating classification for Output Findings.
+    """
+
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+__all__ = [
+    "BaseStringEnum",
+    "SanitizationType",
+    "OutputAction",
+    "PromptLeakMode",
+    "FindingType",
+    "OutputSeverity",
+]
+

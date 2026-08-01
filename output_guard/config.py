@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from output_guard.enums import PromptLeakMode
 from output_guard.exceptions import ConfigurationError
 
 # Default replacement values
@@ -19,13 +20,21 @@ TOXIC_REPLACEMENT: str = "[CONTENT_REMOVED_DUE_TO_SAFETY_POLICY]"
 @dataclass(slots=True, frozen=True)
 class OutputGuardConfig:
     """
-    Configuration settings for Output Guard and its individual sanitizers.
+    Configuration settings for Output Guard, its detectors, and sanitizers.
     """
 
     enabled_sanitizers: tuple[str, ...] = (
+        "prompt_leak",
         "secret",
         "pii",
+        "unsafe",
+        "toxic",
+    )
+    pipeline_order: tuple[str, ...] = (
         "prompt_leak",
+        "secret",
+        "pii",
+        "unsafe",
         "toxic",
     )
     max_output_length: int = 50000
@@ -33,6 +42,7 @@ class OutputGuardConfig:
     pii_replacement: str = PII_REPLACEMENT
     prompt_leak_replacement: str = PROMPT_LEAK_REPLACEMENT
     toxic_replacement: str = TOXIC_REPLACEMENT
+    unsafe_output_replacement: str = "[REDACTED_UNSAFE_COMMAND]"
 
     # Fine-grained PII replacements
     email_replacement: str = PII_REPLACEMENT
@@ -41,17 +51,40 @@ class OutputGuardConfig:
     ssn_replacement: str = PII_REPLACEMENT
     credit_card_replacement: str = PII_REPLACEMENT
 
-    # Control behavior
+    # Detector confidence scores
+    confidence_secret: float = 0.98
+    confidence_prompt_leak: float = 0.95
+    confidence_unsafe: float = 0.95
+    confidence_pii: float = 0.90
+    confidence_policy_violation: float = 0.85
+    confidence_toxic: float = 0.80
+
+    # Version metadata
+    framework_version: str = "1.0.0"
+    module_version: str = "1.0.0"
+    pipeline_version: str = "1.0.0"
+
+    # Control behavior & modes
+    fail_secure: bool = True
+    prompt_leak_mode: PromptLeakMode | str = PromptLeakMode.MASK
     raise_on_error: bool = False
     truncate_exceeding_output: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        """Validates configuration parameters."""
+        """Validates configuration parameters and normalizes enums."""
         if self.max_output_length <= 0:
             raise ConfigurationError(
                 f"max_output_length must be positive, got {self.max_output_length}"
             )
+
+        plmode = (
+            self.prompt_leak_mode.value
+            if isinstance(self.prompt_leak_mode, PromptLeakMode)
+            else str(self.prompt_leak_mode)
+        )
+        object.__setattr__(self, "prompt_leak_mode", PromptLeakMode(plmode) if PromptLeakMode.has_value(plmode) else plmode)
+
 
         if not isinstance(self.enabled_sanitizers, tuple):
             object.__setattr__(
@@ -62,22 +95,27 @@ class OutputGuardConfig:
         """Checks if a specific sanitizer is enabled in the configuration."""
         clean_name = (
             sanitizer_name.lower()
-            .replace("_sanitizer", "")
+            .replace("outputsanitizer", "")
             .replace("sanitizer", "")
+            .replace("output", "")
             .replace("_", "")
             .replace("-", "")
             .strip()
         )
-        return any(
-            enabled.lower()
-            .replace("_sanitizer", "")
-            .replace("sanitizer", "")
-            .replace("_", "")
-            .replace("-", "")
-            .strip()
-            == clean_name
-            for enabled in self.enabled_sanitizers
-        )
+        for enabled in self.enabled_sanitizers:
+            clean_enabled = (
+                enabled.lower()
+                .replace("outputsanitizer", "")
+                .replace("sanitizer", "")
+                .replace("output", "")
+                .replace("_", "")
+                .replace("-", "")
+                .strip()
+            )
+            if clean_enabled == clean_name:
+                return True
+        return False
+
 
     def to_dict(self) -> dict[str, Any]:
         """Serializes OutputGuardConfig to dictionary."""

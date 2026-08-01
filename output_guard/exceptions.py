@@ -47,9 +47,17 @@ class ConfigurationError(OutputGuardError):
     pass
 
 
+class OutputGuardExecutionError(OutputGuardError):
+    """Raised when pipeline execution fails or fail-secure error enforcement triggers."""
+
+    pass
+
+
 __all__ = [
     "OutputGuardError",
     "SanitizationError",
     "InvalidOutputError",
     "ConfigurationError",
+    "OutputGuardExecutionError",
 ]
+

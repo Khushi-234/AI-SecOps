@@ -7,14 +7,47 @@ from __future__ import annotations
 import re
 
 # Sanitizer Identifiers
+# Sanitizer Identifiers
 SANITIZER_SECRET_NAME = "SecretSanitizer"
 SANITIZER_PII_NAME = "PiiSanitizer"
 SANITIZER_PROMPT_LEAK_NAME = "PromptLeakSanitizer"
 SANITIZER_TOXIC_NAME = "ToxicSanitizer"
+SANITIZER_UNSAFE_OUTPUT_NAME = "UnsafeOutputSanitizer"
 
-# Default Warning Messages
+# Detector Identifiers
+DETECTOR_SECRET_NAME = "SecretDetector"
+DETECTOR_PII_NAME = "PiiDetector"
+DETECTOR_PROMPT_LEAK_NAME = "SystemPromptDetector"
+
+DETECTOR_TOXIC_NAME = "ToxicDetector"
+DETECTOR_UNSAFE_NAME = "UnsafeOutputDetector"
+DETECTOR_POLICY_VIOLATION_NAME = "PolicyViolationDetector"
+
+# Default Warning Messages & Replacements
 DEFAULT_PROMPT_LEAK_RESPONSE = "I cannot provide internal system instructions."
 DEFAULT_BLOCKED_OUTPUT_MESSAGE = "[RESPONSE_BLOCKED_BY_SECURITY_POLICY]"
+UNSAFE_OUTPUT_REPLACEMENT = "[REDACTED_UNSAFE_COMMAND]"
+
+# Default Confidence Metrics
+DEFAULT_CONFIDENCE_SECRET = 0.98
+DEFAULT_CONFIDENCE_PROMPT_LEAK = 0.95
+DEFAULT_CONFIDENCE_UNSAFE = 0.95
+DEFAULT_CONFIDENCE_PII = 0.90
+DEFAULT_CONFIDENCE_POLICY_VIOLATION = 0.85
+DEFAULT_CONFIDENCE_TOXIC = 0.80
+
+# Default Severity Ratings
+DEFAULT_SEVERITY_PRIVATE_KEY = "CRITICAL"
+DEFAULT_SEVERITY_SECRET = "HIGH"
+DEFAULT_SEVERITY_UNSAFE = "CRITICAL"
+
+DEFAULT_SEVERITY_PROMPT_LEAK = "HIGH"
+DEFAULT_SEVERITY_POLICY_VIOLATION = "HIGH"
+DEFAULT_SEVERITY_PII_EMAIL = "MEDIUM"
+DEFAULT_SEVERITY_PII_PHONE = "MEDIUM"
+DEFAULT_SEVERITY_PII_SSN = "CRITICAL"
+DEFAULT_SEVERITY_PII_CREDIT_CARD = "CRITICAL"
+DEFAULT_SEVERITY_TOXIC = "MEDIUM"
 
 # ------------------------------------------------------------------------------
 # Secret Detection Regex Patterns
@@ -129,17 +162,59 @@ REGEX_TOXIC_PATTERNS = [
     re.compile(r"(?i)\b(?:how\s+to\s+build\s+a\s+bomb|make\s+explosives)\b"),
 ]
 
+# ------------------------------------------------------------------------------
+# Unsafe Command & Dangerous Payload Regex Patterns (Expanded Coverage)
+# ------------------------------------------------------------------------------
+REGEX_UNSAFE_COMMAND_PATTERNS = [
+    re.compile(r"(?i)\brm\s+-(?:rf|fr|r|f)\s+[/~*.]"),
+    re.compile(r"(?i)\b(?:curl|wget)\s+[^|\n;]+\|\s*(?:sh|bash|zsh|python|perl)\b"),
+    re.compile(r"(?i)\bchmod\s+(?:777|a\+rwx|u\+s)\b"),
+    re.compile(r"(?i)\bmkfs(?:\.[a-z0-9]+)?\s+[/a-z0-9]+"),
+    re.compile(r":\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:"),  # Fork bomb
+    re.compile(r"(?i)\b(?:Invoke-WebRequest|Invoke-Expression|iwr|iex)\s+[^|\n;]+"),
+    re.compile(r"(?i)\bpowershell(?:\.exe)?\s+-(?:enc|encodedcommand|e|ExecutionPolicy\s+Bypass)\b"),
+    re.compile(r"(?i)\b(?:nc|netcat|ncat)\s+-[eE]\s+/bin/(?:sh|bash)\b"),
+    re.compile(r"(?i)\bbash\s+-i\s+>&?\s*/dev/tcp/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d+\b"),
+    re.compile(r"(?i)\b(?:subprocess\.(?:call|Popen|run)|os\.(?:system|popen|exec))\s*\([^)]*\)"),
+]
+
 __all__ = [
     "SANITIZER_SECRET_NAME",
     "SANITIZER_PII_NAME",
     "SANITIZER_PROMPT_LEAK_NAME",
     "SANITIZER_TOXIC_NAME",
+    "SANITIZER_UNSAFE_OUTPUT_NAME",
+    "DETECTOR_SECRET_NAME",
+    "DETECTOR_PII_NAME",
+    "DETECTOR_PROMPT_LEAK_NAME",
+    "DETECTOR_TOXIC_NAME",
+    "DETECTOR_UNSAFE_NAME",
+    "DETECTOR_POLICY_VIOLATION_NAME",
     "DEFAULT_PROMPT_LEAK_RESPONSE",
     "DEFAULT_BLOCKED_OUTPUT_MESSAGE",
+    "UNSAFE_OUTPUT_REPLACEMENT",
+    "DEFAULT_CONFIDENCE_SECRET",
+    "DEFAULT_CONFIDENCE_PROMPT_LEAK",
+    "DEFAULT_CONFIDENCE_UNSAFE",
+    "DEFAULT_CONFIDENCE_PII",
+    "DEFAULT_CONFIDENCE_POLICY_VIOLATION",
+    "DEFAULT_CONFIDENCE_TOXIC",
+    "DEFAULT_SEVERITY_PRIVATE_KEY",
+    "DEFAULT_SEVERITY_SECRET",
+    "DEFAULT_SEVERITY_UNSAFE",
+    "DEFAULT_SEVERITY_PROMPT_LEAK",
+    "DEFAULT_SEVERITY_POLICY_VIOLATION",
+    "DEFAULT_SEVERITY_PII_EMAIL",
+    "DEFAULT_SEVERITY_PII_PHONE",
+    "DEFAULT_SEVERITY_PII_SSN",
+    "DEFAULT_SEVERITY_PII_CREDIT_CARD",
+    "DEFAULT_SEVERITY_TOXIC",
     "SECRET_PATTERNS",
     "PII_PATTERNS",
     "PROMPT_LEAK_PHRASES",
     "REGEX_PROMPT_LEAK_PATTERNS",
     "TOXIC_KEYWORDS",
     "REGEX_TOXIC_PATTERNS",
+    "REGEX_UNSAFE_COMMAND_PATTERNS",
 ]
+

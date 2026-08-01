@@ -4,28 +4,22 @@ Output Guard Module for AI-SecOps Framework.
 Responsible for checking and sanitizing LLM-generated outputs before returning them to users.
 """
 
-from output_guard.config import DEFAULT_OUTPUT_GUARD_CONFIG, OutputGuardConfig
-from output_guard.enums import OutputAction, SanitizationType
-from output_guard.exceptions import (
-    ConfigurationError,
-    InvalidOutputError,
-    OutputGuardError,
-    SanitizationError,
-)
-from output_guard.models import OutputSanitizationResult, SanitizationResult
-from output_guard.sanitizer import OutputGuard, OutputSanitizer
+from output_guard.config import OutputGuardConfig
+from output_guard.enums import OutputAction
+from output_guard.exceptions import OutputGuardError
+from output_guard.facade import OutputGuardFacade, get_output_guard
+from output_guard.models import OutputFinding, OutputSanitizationResult
+from output_guard.sanitizer import OutputGuard
 
 __all__ = [
+    "OutputGuardFacade",
     "OutputGuard",
-    "OutputSanitizer",
-    "OutputSanitizationResult",
-    "SanitizationResult",
-    "OutputAction",
-    "SanitizationType",
+    "get_output_guard",
     "OutputGuardConfig",
-    "DEFAULT_OUTPUT_GUARD_CONFIG",
+    "OutputSanitizationResult",
+    "OutputFinding",
+    "OutputAction",
     "OutputGuardError",
-    "SanitizationError",
-    "InvalidOutputError",
-    "ConfigurationError",
 ]
+
+

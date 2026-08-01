@@ -9,11 +9,78 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Mapping
 
-from output_guard.enums import OutputAction, SanitizationType
+from output_guard.enums import (
+    FindingType,
+    OutputAction,
+    OutputSeverity,
+    SanitizationType,
+)
+
+
+@dataclass(slots=True, frozen=True)
+class OutputFinding:
+    """
+    Typed security finding payload produced by an Output Guard detector.
+
+    Attributes:
+        detector_name: Name of the detector emitting the finding (e.g. 'SecretDetector').
+        finding_type: Category of issue detected (FindingType or string).
+        severity: Severity level (OutputSeverity or string).
+        confidence: Confidence score from 0.0 to 1.0.
+        matches: Tuple of matched text snippets or indicators.
+        description: Human-readable finding summary.
+        metadata: Contextual metric details.
+        timestamp: Timezone-aware UTC timestamp.
+    """
+
+    detector_name: str
+    finding_type: FindingType | str
+    severity: OutputSeverity | str = OutputSeverity.MEDIUM
+    confidence: float = 0.95
+    matches: tuple[str, ...] = field(default_factory=tuple)
+    description: str = ""
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+    def __post_init__(self) -> None:
+        """Normalizes enums, strings, and tuple structures."""
+        ftype_val = (
+            self.finding_type.value
+            if isinstance(self.finding_type, Enum)
+            else str(self.finding_type)
+        )
+        object.__setattr__(self, "finding_type", ftype_val)
+
+        sev_val = (
+            self.severity.value
+            if isinstance(self.severity, Enum)
+            else str(self.severity)
+        )
+        object.__setattr__(self, "severity", sev_val)
+
+        if not isinstance(self.matches, tuple):
+            object.__setattr__(self, "matches", tuple(self.matches))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serializes OutputFinding to dictionary format."""
+        return {
+            "detector_name": self.detector_name,
+            "finding_type": self.finding_type,
+            "severity": self.severity,
+            "confidence": self.confidence,
+            "matches": list(self.matches),
+            "description": self.description,
+            "metadata": dict(self.metadata),
+            "timestamp": self.timestamp.isoformat(),
+        }
+
 
 
 @dataclass(slots=True, frozen=True)
 class SanitizationResult:
+
     """
     Result payload produced by an individual sanitizer.
 
@@ -133,4 +200,5 @@ class OutputSanitizationResult:
         }
 
 
-__all__ = ["SanitizationResult", "OutputSanitizationResult"]
+__all__ = ["OutputFinding", "SanitizationResult", "OutputSanitizationResult"]
+
