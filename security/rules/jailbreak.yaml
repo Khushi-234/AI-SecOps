@@ -137,3 +137,34 @@ rules:
       - "start your response with"
       - "begin the output with"
       - "unfiltered response"
+
+  - rule_id: "JB-005"
+    rule_name: "Developer Mode & Safeguard Bypass"
+    description: "Detects developer mode activation, freedom mode, unlimited mode, and filter disablement instructions."
+    enabled: true
+    threat_type: "JAILBREAK"
+    severity: "CRITICAL"
+    confidence: 0.96
+    category: "JAILBREAK_VARIANTS"
+    priority: 5
+    tags:
+      - "jailbreak"
+      - "developer-mode"
+      - "filter-bypass"
+      - "owasp-llm01"
+    recommendation: "Block request. High risk activation of unrestricted or developer mode simulation."
+    phrases:
+      - "developer mode"
+      - "unlimited mode"
+      - "freedom mode"
+      - "no restrictions"
+      - "no safeguards"
+      - "unfiltered mode"
+      - "bypass safety"
+      - "disable filters"
+      - "disable moderation"
+      - "dan mode"
+    patterns:
+      - '(?i)\b(developer mode|unlimited mode|freedom mode|no restrictions|no safeguards|unfiltered mode|bypass safety|disable filters|disable moderation|dan mode)\b'
+      - '(?i)\b(unfiltered mode|no safeguards|disable moderation)\b'
+
