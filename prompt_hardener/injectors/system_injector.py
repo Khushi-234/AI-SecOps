@@ -26,8 +26,8 @@ class SystemInjector(BaseInjector):
         Strengthens prompt with immutable system protection rules.
         """
         if not prompt:
-            return SYSTEM_PROMPT_PROTECTION
-
+            return f"[SYSTEM DEFENSE]: {SYSTEM_PROMPT_PROTECTION}"
+            
         if SYSTEM_PROMPT_PROTECTION in constraints:
             return f"{prompt}\n[SYSTEM DEFENSE]: {SYSTEM_PROMPT_PROTECTION}"
 

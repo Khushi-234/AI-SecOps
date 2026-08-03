@@ -26,7 +26,10 @@ class DefenseInjector(BaseInjector):
         """
         if not constraints:
             return prompt
-
+        
+        if not prompt:
+            return self.DEFENSIVE_HEADER
+            
         return f"{prompt}\n{self.DEFENSIVE_HEADER}"
 
 

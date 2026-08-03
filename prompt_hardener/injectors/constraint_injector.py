@@ -29,7 +29,7 @@ class ConstraintInjector(BaseInjector):
         if not prompt:
             return formatted_constraints
 
-        return f"{prompt}\n{formatted_constraints}"
+        return f"{prompt}\n\n[SECURITY CONSTRAINTS]:\n{formatted_constraints}"
 
 
 __all__ = ["ConstraintInjector"]
