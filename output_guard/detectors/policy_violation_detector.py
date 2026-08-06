@@ -39,5 +39,3 @@ class PolicyViolationDetector(BaseOutputDetector):
                 )
             )
         return findings
-
-

@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping
 
-from output_guard.constants import DETECTOR_UNSAFE_NAME, REGEX_UNSAFE_COMMAND_PATTERNS
+from output_guard.constants import DETECTOR_UNSAFE_NAME, REGEX_UNSAFE_COMMAND_PATTERNS, UNSAFE_KEYWORDS
 from output_guard.detectors.base_detector import BaseOutputDetector
 from output_guard.enums import FindingType, OutputSeverity
 from output_guard.models import OutputFinding
@@ -27,6 +27,9 @@ class UnsafeOutputDetector(BaseOutputDetector):
         if not output_text or not isinstance(output_text, str):
             return findings
 
+        lower_output = output_text.lower()
+        matched_keywords = [kw for kw in UNSAFE_KEYWORDS if kw in lower_output]
+
         for pattern in REGEX_UNSAFE_COMMAND_PATTERNS:
             matches = pattern.findall(output_text)
             if matches:
@@ -41,6 +44,19 @@ class UnsafeOutputDetector(BaseOutputDetector):
                         metadata={"pattern": pattern.pattern, "count": len(matches)},
                     )
                 )
+
+        if matched_keywords and not findings:
+            findings.append(
+                OutputFinding(
+                    detector_name=self.detector_name,
+                    finding_type=FindingType.UNSAFE_CODE,
+                    severity=OutputSeverity.CRITICAL,
+                    confidence=self.config.confidence_unsafe,
+                    matches=tuple(matched_keywords),
+                    description=f"Detected unsafe command keyword ({len(matched_keywords)} matches)",
+                    metadata={"keywords": matched_keywords},
+                )
+            )
 
         return findings
 
