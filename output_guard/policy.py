@@ -48,5 +48,3 @@ class OutputPolicyEvaluator:
 
         # 4. Lowest Priority: ALLOW
         return OutputAction.ALLOW
-
-

@@ -57,16 +57,14 @@ class SecretSanitizer(BaseSanitizer):
 
             try:
                 for secret_type, pattern in SECRET_PATTERNS.items():
-                    for match in pattern.finditer(current_text):
-                        issue_msg = f"Detected secret ({secret_type})"
-                        if issue_msg not in detected_issues:
-                            detected_issues.append(issue_msg)
-
                     new_text, count = replace_regex_matches(
                         current_text, pattern, replacement_token
                     )
                     if count > 0:
                         total_replacements += count
+                        issue_msg = f"Detected secret ({secret_type})"
+                        if issue_msg not in detected_issues:
+                            detected_issues.append(issue_msg)
                         changes.append(
                             {
                                 "secret_type": secret_type,

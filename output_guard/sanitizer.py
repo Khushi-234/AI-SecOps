@@ -6,7 +6,6 @@ Main pipeline orchestrator for evaluating, inspecting, and sanitizing LLM output
 
 from __future__ import annotations
 
-import logging
 from typing import Sequence
 
 from output_guard.config import DEFAULT_OUTPUT_GUARD_CONFIG, OutputGuardConfig
@@ -22,9 +21,6 @@ from output_guard.sanitizers.toxic_sanitizer import ToxicSanitizer
 from output_guard.sanitizers.unsafe_output_sanitizer import UnsafeOutputSanitizer
 from output_guard.utils import measure_execution_time, truncate_output
 
-logger = logging.getLogger(__name__)
-
-
 class OutputSanitizer:
     """
     Output Redaction Engine that runs configured sanitizers against LLM generated output via SanitizationPipeline.
@@ -38,7 +34,7 @@ class OutputSanitizer:
         self.config = config or DEFAULT_OUTPUT_GUARD_CONFIG
         self.pipeline = SanitizationPipeline(self.config, sanitizers=custom_sanitizers)
 
-    def sanitize(self, output: str) -> OutputSanitizationResult:
+    def sanitize(self, output: str | None) -> OutputSanitizationResult:
         """
         Delegates sanitization execution to SanitizationPipeline.
         """

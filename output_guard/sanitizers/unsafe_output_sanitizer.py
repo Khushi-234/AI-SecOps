@@ -5,9 +5,10 @@ Sanitizer for detecting and neutralizing unsafe command payloads in LLM output.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
-from output_guard.constants import REGEX_UNSAFE_COMMAND_PATTERNS, SANITIZER_UNSAFE_OUTPUT_NAME
+from output_guard.constants import REGEX_UNSAFE_COMMAND_PATTERNS, SANITIZER_UNSAFE_OUTPUT_NAME, UNSAFE_KEYWORDS
 from output_guard.enums import SanitizationType
 from output_guard.exceptions import SanitizationError
 from output_guard.models import SanitizationResult
@@ -15,7 +16,6 @@ from output_guard.sanitizers.base_sanitizer import BaseSanitizer
 from output_guard.utils import measure_execution_time
 
 logger = logging.getLogger(__name__)
-audit_logger = logging.getLogger("output_guard.audit")
 
 
 class UnsafeOutputSanitizer(BaseSanitizer):
@@ -58,18 +58,34 @@ class UnsafeOutputSanitizer(BaseSanitizer):
 
             try:
                 for pattern in REGEX_UNSAFE_COMMAND_PATTERNS:
-                    matches = pattern.findall(current_text)
-                    if matches:
-                        replacements_count += len(matches)
-                        issue_desc = f"Unsafe command pattern match ({len(matches)} occurrences)"
+                    current_text, count = pattern.subn(replacement_token, current_text)
+                    if count > 0:
+                        replacements_count += count
+                        issue_desc = f"Unsafe command pattern match ({count} occurrences)"
                         if issue_desc not in detected_issues:
                             detected_issues.append(issue_desc)
-
-                        current_text = pattern.sub(replacement_token, current_text)
                         changes.append(
                             {
                                 "pattern": pattern.pattern,
-                                "count": len(matches),
+                                "count": count,
+                                "replacement": replacement_token,
+                            }
+                        )
+
+                # Redact plain keyword matches (case-insensitive) in single pass
+                for keyword in UNSAFE_KEYWORDS:
+                    current_text, count = re.subn(
+                        re.escape(keyword), replacement_token, current_text, flags=re.IGNORECASE
+                    )
+                    if count > 0:
+                        replacements_count += count
+                        issue_desc = f"Unsafe keyword match: '{keyword}'"
+                        if issue_desc not in detected_issues:
+                            detected_issues.append(issue_desc)
+                        changes.append(
+                            {
+                                "keyword": keyword,
+                                "count": count,
                                 "replacement": replacement_token,
                             }
                         )
@@ -84,15 +100,6 @@ class UnsafeOutputSanitizer(BaseSanitizer):
 
             is_modified = (current_text != output)
             exec_time = elapsed()
-
-            # Audit logging hook
-            audit_logger.info(
-                "[OutputGuard Audit] Sanitizer: %s | Modified: %s | Replacements: %d | Time: %.2fms",
-                self.sanitizer_name,
-                is_modified,
-                replacements_count,
-                exec_time,
-            )
 
         return SanitizationResult(
             sanitizer_name=self.sanitizer_name,

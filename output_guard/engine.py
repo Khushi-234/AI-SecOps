@@ -29,6 +29,7 @@ from output_guard.sanitizer import OutputSanitizer
 from output_guard.utils import measure_execution_time, truncate_output
 
 logger = logging.getLogger(__name__)
+audit_logger = logging.getLogger("output_guard.audit")
 
 
 class OutputGuardEngine:
@@ -90,9 +91,27 @@ class OutputGuardEngine:
                         detector_findings.append(finding)
                 except Exception as exc:
                     logger.error(f"Detector {detector.detector_name} failed: {exc}")
+                    audit_logger.warning(
+                        "[OutputGuard Audit] Detector failure: %s | Error: %s",
+                        detector.detector_name,
+                        exc,
+                    )
 
-            # 3. Run Sanitizer Pipeline
-            sanitization_result = self.sanitizer.sanitize(working_output)
+            # 3. Run Sanitizer Pipeline — only if detectors found something
+            if detector_findings:
+                sanitization_result = self.sanitizer.sanitize(working_output)
+            else:
+                # No issues detected → pass output through without sanitization
+                sanitization_result = OutputSanitizationResult(
+                    original_output=working_output,
+                    sanitized_output=working_output,
+                    modified=False,
+                    applied_sanitizers=[],
+                    detected_issues=[],
+                    action_taken=OutputAction.ALLOW,
+                    execution_time_ms=0.0,
+                    metadata={"step_results": [], "sanitizers_count": 0},
+                )
             final_output = sanitization_result.sanitized_output
 
             # 4. Evaluate Policy Decision
@@ -120,8 +139,6 @@ class OutputGuardEngine:
                     "pipeline_version": getattr(self.config, "pipeline_version", "1.0.0"),
                 },
             )
-
-
 
         return OutputSanitizationResult(
             original_output=llm_output,

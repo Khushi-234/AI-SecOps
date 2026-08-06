@@ -176,7 +176,7 @@ def test_public_api_exports():
     import output_guard
     expected = [
         "OutputGuardFacade",
-        "OutputGuard",
+        "OutputSanitizer",
         "get_output_guard",
         "OutputGuardConfig",
         "OutputSanitizationResult",

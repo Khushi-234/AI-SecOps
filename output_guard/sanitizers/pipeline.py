@@ -77,7 +77,7 @@ class SanitizationPipeline:
         return active_sanitizers
 
 
-    def run(self, output: str) -> OutputSanitizationResult:
+    def run(self, output: str | None) -> OutputSanitizationResult:
         """
         Executes the sanitization pipeline sequentially over output text.
         """

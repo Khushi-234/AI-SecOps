@@ -59,18 +59,16 @@ class ToxicSanitizer(BaseSanitizer):
             replacement_token = self.config.toxic_replacement
 
             try:
-                # Scan for regex patterns
+                # Scan and replace regex patterns in a single pass
                 for pattern in REGEX_TOXIC_PATTERNS:
-                    for match in pattern.finditer(current_text):
-                        issue_msg = "Detected toxic content pattern"
-                        if issue_msg not in detected_issues:
-                            detected_issues.append(issue_msg)
-
                     new_text, count = replace_regex_matches(
                         current_text, pattern, replacement_token
                     )
                     if count > 0:
                         total_replacements += count
+                        issue_msg = "Detected toxic content pattern"
+                        if issue_msg not in detected_issues:
+                            detected_issues.append(issue_msg)
                         changes.append(
                             {
                                 "type": "toxic_pattern",

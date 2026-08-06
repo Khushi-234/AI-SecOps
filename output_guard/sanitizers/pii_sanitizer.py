@@ -68,17 +68,14 @@ class PiiSanitizer(BaseSanitizer):
             try:
                 for pii_type, pattern in PII_PATTERNS.items():
                     replacement_token = self._get_replacement_for_type(pii_type)
-
-                    for match in pattern.finditer(current_text):
-                        issue_msg = f"Detected PII ({pii_type})"
-                        if issue_msg not in detected_issues:
-                            detected_issues.append(issue_msg)
-
                     new_text, count = replace_regex_matches(
                         current_text, pattern, replacement_token
                     )
                     if count > 0:
                         total_replacements += count
+                        issue_msg = f"Detected PII ({pii_type})"
+                        if issue_msg not in detected_issues:
+                            detected_issues.append(issue_msg)
                         changes.append(
                             {
                                 "pii_type": pii_type,

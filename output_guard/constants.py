@@ -7,7 +7,6 @@ from __future__ import annotations
 import re
 
 # Sanitizer Identifiers
-# Sanitizer Identifiers
 SANITIZER_SECRET_NAME = "SecretSanitizer"
 SANITIZER_PII_NAME = "PiiSanitizer"
 SANITIZER_PROMPT_LEAK_NAME = "PromptLeakSanitizer"
@@ -163,6 +162,25 @@ REGEX_TOXIC_PATTERNS = [
 ]
 
 # ------------------------------------------------------------------------------
+# Unsafe Command & Dangerous Payload Keyword / Phrase Indicators
+# ------------------------------------------------------------------------------
+UNSAFE_KEYWORDS = [
+    "rm -rf",
+    "fork bomb",
+    "reverse shell",
+    "bind shell",
+    "drop table",
+    "drop database",
+    "format c:",
+    "mkfs",
+    "dd if=/dev/zero",
+    "shutdown -h now",
+    "shutdown /s",
+    "eval(base64",
+    "exec(base64",
+]
+
+# ------------------------------------------------------------------------------
 # Unsafe Command & Dangerous Payload Regex Patterns (Expanded Coverage)
 # ------------------------------------------------------------------------------
 REGEX_UNSAFE_COMMAND_PATTERNS = [
@@ -215,6 +233,7 @@ __all__ = [
     "REGEX_PROMPT_LEAK_PATTERNS",
     "TOXIC_KEYWORDS",
     "REGEX_TOXIC_PATTERNS",
+    "UNSAFE_KEYWORDS",
     "REGEX_UNSAFE_COMMAND_PATTERNS",
 ]
 

@@ -20,7 +20,7 @@ from output_guard.models import SanitizationResult
 from output_guard.sanitizers.base_sanitizer import BaseSanitizer
 from output_guard.utils import measure_execution_time
 
-audit_logger = logging.getLogger("output_guard.audit")
+logger = logging.getLogger(__name__)
 
 
 class PromptLeakSanitizer(BaseSanitizer):
@@ -128,13 +128,13 @@ class PromptLeakSanitizer(BaseSanitizer):
             is_modified = is_leak_detected
             exec_time = elapsed()
 
-            audit_logger.info(
-                "[OutputGuard Audit] Sanitizer: %s | Mode: %s | Modified: %s | Time: %.2fms",
-                self.sanitizer_name,
-                mode,
-                is_modified,
-                exec_time,
-            )
+            # audit_logger.info(
+            #     "[OutputGuard Audit] Sanitizer: %s | Mode: %s | Modified: %s | Time: %.2fms",
+            #     self.sanitizer_name,
+            #     mode,
+            #     is_modified,
+            #     exec_time,
+            # )
 
         return SanitizationResult(
             sanitizer_name=self.sanitizer_name,
