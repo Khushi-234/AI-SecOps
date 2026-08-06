@@ -43,9 +43,3 @@ class OutputSanitizer:
         Delegates sanitization execution to SanitizationPipeline.
         """
         return self.pipeline.run(output)
-
-
-# Alias for intuitive usage
-OutputGuard = OutputSanitizer
-
-__all__ = ["OutputSanitizer", "OutputGuard"]

@@ -4,12 +4,12 @@ Unit tests for the main OutputGuard / OutputSanitizer redaction engine.
 
 import pytest
 
-from output_guard import OutputGuard, OutputGuardConfig, OutputAction
+from output_guard import OutputSanitizer, OutputGuardConfig, OutputAction
 from output_guard.exceptions import InvalidOutputError
 
 
 def test_output_guard_clean_response():
-    guard = OutputGuard()
+    guard = OutputSanitizer()
     res = guard.sanitize("This is a safe and helpful assistant response.")
 
     assert res.modified is False
@@ -19,7 +19,7 @@ def test_output_guard_clean_response():
 
 
 def test_output_guard_multiple_sanitizations():
-    guard = OutputGuard()
+    guard = OutputSanitizer()
     sample = (
         "Here is the user email user@company.org and AWS key AKIA9876543210FEDCBA."
     )
@@ -35,7 +35,7 @@ def test_output_guard_multiple_sanitizations():
 
 def test_output_guard_raise_on_error():
     config = OutputGuardConfig(raise_on_error=True)
-    guard = OutputGuard(config=config)
+    guard = OutputSanitizer(config=config)
 
     with pytest.raises(InvalidOutputError):
         guard.sanitize(None)

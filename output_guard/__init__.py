@@ -9,11 +9,11 @@ from output_guard.enums import OutputAction
 from output_guard.exceptions import OutputGuardError
 from output_guard.facade import OutputGuardFacade, get_output_guard
 from output_guard.models import OutputFinding, OutputSanitizationResult
-from output_guard.sanitizer import OutputGuard
+from output_guard.sanitizer import OutputSanitizer
 
 __all__ = [
     "OutputGuardFacade",
-    "OutputGuard",
+    "OutputSanitizer",
     "get_output_guard",
     "OutputGuardConfig",
     "OutputSanitizationResult",
