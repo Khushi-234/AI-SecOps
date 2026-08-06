@@ -1,22 +1,19 @@
 """
-Sanitizer for detecting and preventing system prompt disclosure or internal instruction leaks in LLM output.
+Sanitizer for preventing system prompt disclosure or internal instruction leaks in LLM output.
 """
 
 from __future__ import annotations
 
 import logging
-import re
-from typing import Any
+from typing import Any, Sequence
 
 from output_guard.constants import (
     DEFAULT_PROMPT_LEAK_RESPONSE,
-    PROMPT_LEAK_PHRASES,
-    REGEX_PROMPT_LEAK_PATTERNS,
     SANITIZER_PROMPT_LEAK_NAME,
 )
-from output_guard.enums import SanitizationType
+from output_guard.enums import FindingType, SanitizationType
 from output_guard.exceptions import SanitizationError
-from output_guard.models import SanitizationResult
+from output_guard.models import OutputFinding, SanitizationResult
 from output_guard.sanitizers.base_sanitizer import BaseSanitizer
 from output_guard.utils import measure_execution_time
 
@@ -25,9 +22,10 @@ logger = logging.getLogger(__name__)
 
 class PromptLeakSanitizer(BaseSanitizer):
     """
-    Detects and sanitizes responses where the LLM attempts to reveal system prompts,
-    developer instructions, internal policies, or hidden rules.
+    Sanitizes responses where system prompt leaks or internal instructions are detected
+    by consuming OutputFinding objects from SystemPromptDetector.
     Supports configurable prompt leak modes: MASK, REMOVE, REPLACE, BLOCK.
+    Does not run independent pattern detection.
     """
 
     @property
@@ -38,9 +36,17 @@ class PromptLeakSanitizer(BaseSanitizer):
     def sanitization_type(self) -> SanitizationType:
         return SanitizationType.PROMPT_LEAK
 
-    def sanitize(self, output: str) -> SanitizationResult:
+    def _get_replacement_for_finding(self, finding: OutputFinding) -> str:
+        """Helper to get replacement token for prompt leak findings."""
+        return self.config.prompt_leak_replacement
+
+    def sanitize(
+        self,
+        output: str,
+        findings: Sequence[OutputFinding] | None = None,
+    ) -> SanitizationResult:
         """
-        Scans output for prompt leakage indicators and sanitizes text based on configured mode.
+        Sanitizes output text containing detected prompt leaks using provided findings.
         """
         if not output:
             return SanitizationResult(
@@ -63,78 +69,54 @@ class PromptLeakSanitizer(BaseSanitizer):
             replacement_token = self.config.prompt_leak_replacement
             mode = getattr(self.config, "prompt_leak_mode", "MASK").upper()
 
-            try:
-                lower_output = output.lower()
+            if findings:
+                try:
+                    for finding in findings:
+                        if getattr(finding, "finding_type", None) != FindingType.PROMPT_LEAK:
+                            continue
 
-                # Check static phrases
-                for phrase in PROMPT_LEAK_PHRASES:
-                    if phrase in lower_output:
                         is_leak_detected = True
-                        issue_msg = f"Detected prompt leak phrase: '{phrase}'"
+                        issue_msg = getattr(finding, "description", None) or "Detected prompt leak"
                         if issue_msg not in detected_issues:
                             detected_issues.append(issue_msg)
 
-                # Check regex patterns
-                for pattern in REGEX_PROMPT_LEAK_PATTERNS:
-                    matches = pattern.findall(current_text)
-                    if matches:
-                        is_leak_detected = True
-                        issue_msg = "Detected prompt leak pattern match"
-                        if issue_msg not in detected_issues:
-                            detected_issues.append(issue_msg)
-
-                if is_leak_detected:
-                    if mode == "BLOCK":
-                        sanitized = DEFAULT_PROMPT_LEAK_RESPONSE
-                    elif mode == "REMOVE":
-                        sanitized = current_text
-                        for phrase in PROMPT_LEAK_PHRASES:
-                            pattern = re.compile(re.escape(phrase), re.IGNORECASE)
-                            sanitized = pattern.sub("", sanitized)
-                        for pattern in REGEX_PROMPT_LEAK_PATTERNS:
-                            sanitized = pattern.sub("", sanitized)
-                    elif mode == "REPLACE":
-                        sanitized = DEFAULT_PROMPT_LEAK_RESPONSE
-                    else:  # MASK (default)
-                        stripped_lower = lower_output.strip()
-                        if any(stripped_lower.startswith(p) for p in PROMPT_LEAK_PHRASES) or len(output.split()) < 40:
+                        matches = getattr(finding, "matches", ()) or ()
+                        if mode == "BLOCK" or mode == "REPLACE":
                             sanitized = DEFAULT_PROMPT_LEAK_RESPONSE
-                        else:
+                        elif mode == "REMOVE":
                             sanitized = current_text
-                            for phrase in PROMPT_LEAK_PHRASES:
-                                pattern = re.compile(re.escape(phrase), re.IGNORECASE)
-                                sanitized = pattern.sub(replacement_token, sanitized)
-                            for pattern in REGEX_PROMPT_LEAK_PATTERNS:
-                                sanitized = pattern.sub(replacement_token, sanitized)
+                            for match in matches:
+                                if match and match in sanitized:
+                                    sanitized = sanitized.replace(match, "")
+                        else:  # MASK (default)
+                            if len(output.split()) < 40 or not matches:
+                                sanitized = DEFAULT_PROMPT_LEAK_RESPONSE
+                            else:
+                                sanitized = current_text
+                                for match in matches:
+                                    if match and match in sanitized:
+                                        sanitized = sanitized.replace(match, replacement_token)
 
-                    changes.append(
-                        {
-                            "leak_detected": True,
-                            "mode": mode,
-                            "replacement": replacement_token,
-                            "sanitized_output": sanitized,
-                        }
-                    )
-                    current_text = sanitized
+                        changes.append(
+                            {
+                                "leak_detected": True,
+                                "mode": mode,
+                                "replacement": replacement_token,
+                                "sanitized_output": sanitized,
+                            }
+                        )
+                        current_text = sanitized
 
-            except Exception as e:
-                logger.error(f"Error in PromptLeakSanitizer execution: {e}")
-                if self.config.raise_on_error:
-                    raise SanitizationError(
-                        f"PromptLeakSanitizer failed: {str(e)}",
-                        sanitizer_name=self.sanitizer_name,
-                    ) from e
+                except Exception as e:
+                    logger.error(f"Error in PromptLeakSanitizer execution: {e}")
+                    if self.config.raise_on_error:
+                        raise SanitizationError(
+                            f"PromptLeakSanitizer failed: {str(e)}",
+                            sanitizer_name=self.sanitizer_name,
+                        ) from e
 
             is_modified = is_leak_detected
             exec_time = elapsed()
-
-            # audit_logger.info(
-            #     "[OutputGuard Audit] Sanitizer: %s | Mode: %s | Modified: %s | Time: %.2fms",
-            #     self.sanitizer_name,
-            #     mode,
-            #     is_modified,
-            #     exec_time,
-            # )
 
         return SanitizationResult(
             sanitizer_name=self.sanitizer_name,
@@ -147,7 +129,6 @@ class PromptLeakSanitizer(BaseSanitizer):
             execution_time_ms=exec_time,
             metadata={"leak_detected": is_leak_detected, "mode": mode},
         )
-
 
 
 __all__ = ["PromptLeakSanitizer"]

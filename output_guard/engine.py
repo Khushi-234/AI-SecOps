@@ -99,7 +99,10 @@ class OutputGuardEngine:
 
             # 3. Run Sanitizer Pipeline — only if detectors found something
             if detector_findings:
-                sanitization_result = self.sanitizer.sanitize(working_output)
+                sanitization_result = self.sanitizer.sanitize(
+                    working_output,
+                    findings=detector_findings,
+                )
             else:
                 # No issues detected → pass output through without sanitization
                 sanitization_result = OutputSanitizationResult(

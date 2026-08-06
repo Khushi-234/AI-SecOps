@@ -5,12 +5,12 @@ Abstract base class interface for Output Guard sanitizers.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:
     from output_guard.config import OutputGuardConfig
     from output_guard.enums import SanitizationType
-    from output_guard.models import SanitizationResult
+    from output_guard.models import OutputFinding, SanitizationResult
 
 
 class BaseSanitizer(ABC):
@@ -35,12 +35,17 @@ class BaseSanitizer(ABC):
         pass
 
     @abstractmethod
-    def sanitize(self, output: str) -> SanitizationResult:
+    def sanitize(
+        self,
+        output: str,
+        findings: Sequence[OutputFinding] | None = None,
+    ) -> SanitizationResult:
         """
-        Analyzes and sanitizes the given LLM output string.
+        Analyzes and sanitizes the given LLM output string based on optional detector findings.
 
         Args:
             output: The generated LLM response to sanitize.
+            findings: Optional list of OutputFinding objects provided by detectors.
 
         Returns:
             SanitizationResult containing modified text, status, and detected issues.

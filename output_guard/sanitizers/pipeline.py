@@ -19,7 +19,7 @@ from output_guard.exceptions import (
     SanitizationError,
 )
 from output_guard.logger import log_pipeline, log_sanitization
-from output_guard.models import OutputSanitizationResult, SanitizationResult
+from output_guard.models import OutputFinding, OutputSanitizationResult, SanitizationResult
 from output_guard.sanitizers.base_sanitizer import BaseSanitizer
 from output_guard.sanitizers.pii_sanitizer import PiiSanitizer
 from output_guard.sanitizers.prompt_leak_sanitizer import PromptLeakSanitizer
@@ -77,15 +77,27 @@ class SanitizationPipeline:
         return active_sanitizers
 
 
-    def run(self, output: str | None) -> OutputSanitizationResult:
+    def run(
+        self,
+        output: str | None,
+        findings: Sequence[OutputFinding] | None = None,
+    ) -> OutputSanitizationResult:
         """
         Executes the sanitization pipeline sequentially over output text.
+        If findings are provided, passes them to individual sanitizers.
         """
         if output is None:
             if self.config.raise_on_error:
                 raise InvalidOutputError("LLM output cannot be None.")
             output = ""
 
+        sanitizers_to_run = self.sanitizers
+        if findings is not None:
+            active_finding_types = {f.finding_type for f in findings if hasattr(f, "finding_type")}
+            sanitizers_to_run = [
+                s for s in self.sanitizers
+                if getattr(s, "sanitization_type", None) in active_finding_types
+            ]
 
         with measure_execution_time() as elapsed:
             current_output = output
@@ -94,9 +106,11 @@ class SanitizationPipeline:
             step_results: list[dict] = []
             is_modified = False
 
-            for sanitizer in self.sanitizers:
+            for sanitizer in sanitizers_to_run:
                 try:
-                    result: SanitizationResult = sanitizer.sanitize(current_output)
+                    result: SanitizationResult = sanitizer.sanitize(
+                        current_output, findings=findings
+                    )
                     step_results.append(result.to_dict())
 
                     if result.detected_issues:

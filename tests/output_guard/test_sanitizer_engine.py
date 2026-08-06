@@ -19,11 +19,12 @@ def test_output_guard_clean_response():
 
 
 def test_output_guard_multiple_sanitizations():
-    guard = OutputSanitizer()
+    from output_guard import OutputGuardFacade
+    guard = OutputGuardFacade()
     sample = (
         "Here is the user email user@company.org and AWS key AKIA9876543210FEDCBA."
     )
-    res = guard.sanitize(sample)
+    res = guard.guard_output(sample)
 
     assert res.modified is True
     assert res.action_taken == "SANITIZE"

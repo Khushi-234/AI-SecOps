@@ -1,29 +1,27 @@
 """
-Sanitizer for detecting and modifying toxic, abusive, or unsafe content in LLM output.
+Sanitizer for modifying toxic, abusive, or unsafe content in LLM output.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Sequence
 
-from output_guard.constants import (
-    REGEX_TOXIC_PATTERNS,
-    SANITIZER_TOXIC_NAME,
-    TOXIC_KEYWORDS,
-)
-from output_guard.enums import SanitizationType
+from output_guard.constants import SANITIZER_TOXIC_NAME
+from output_guard.enums import FindingType, SanitizationType
 from output_guard.exceptions import SanitizationError
-from output_guard.models import SanitizationResult
+from output_guard.models import OutputFinding, SanitizationResult
 from output_guard.sanitizers.base_sanitizer import BaseSanitizer
-from output_guard.utils import measure_execution_time, replace_regex_matches
+from output_guard.utils import measure_execution_time
 
 logger = logging.getLogger(__name__)
 
 
 class ToxicSanitizer(BaseSanitizer):
     """
-    Detects toxic, harmful, abusive, or unsafe text in LLM responses and sanitizes or replaces it.
+    Sanitizes toxic, harmful, abusive, or unsafe text in LLM responses
+    by consuming OutputFinding objects from ToxicDetector.
+    Does not run independent pattern detection.
     """
 
     @property
@@ -34,9 +32,17 @@ class ToxicSanitizer(BaseSanitizer):
     def sanitization_type(self) -> SanitizationType:
         return SanitizationType.TOXIC_CONTENT
 
-    def sanitize(self, output: str) -> SanitizationResult:
+    def _get_replacement_for_finding(self, finding: OutputFinding) -> str:
+        """Helper to get replacement token for toxic content findings."""
+        return self.config.toxic_replacement
+
+    def sanitize(
+        self,
+        output: str,
+        findings: Sequence[OutputFinding] | None = None,
+    ) -> SanitizationResult:
         """
-        Scans output for toxic patterns and keywords and replaces them with safe alternatives or tokens.
+        Sanitizes toxic content in output text using provided findings.
         """
         if not output:
             return SanitizationResult(
@@ -58,45 +64,50 @@ class ToxicSanitizer(BaseSanitizer):
 
             replacement_token = self.config.toxic_replacement
 
-            try:
-                # Scan and replace regex patterns in a single pass
-                for pattern in REGEX_TOXIC_PATTERNS:
-                    new_text, count = replace_regex_matches(
-                        current_text, pattern, replacement_token
-                    )
-                    if count > 0:
-                        total_replacements += count
-                        issue_msg = "Detected toxic content pattern"
-                        if issue_msg not in detected_issues:
-                            detected_issues.append(issue_msg)
-                        changes.append(
-                            {
-                                "type": "toxic_pattern",
-                                "count": count,
-                                "replacement": replacement_token,
-                            }
-                        )
-                        current_text = new_text
+            if findings:
+                try:
+                    for finding in findings:
+                        if getattr(finding, "finding_type", None) != FindingType.TOXIC_CONTENT:
+                            continue
 
-                # Scan for keywords
-                lower_text = current_text.lower()
-                for keyword in TOXIC_KEYWORDS:
-                    if keyword in lower_text:
-                        issue_msg = f"Detected toxic keyword: '{keyword}'"
-                        if issue_msg not in detected_issues:
-                            detected_issues.append(issue_msg)
+                        replacement_token = self._get_replacement_for_finding(finding)
+                        matches = getattr(finding, "matches", ()) or ()
+                        finding_count = 0
 
-            except Exception as e:
-                logger.error(f"Error in ToxicSanitizer execution: {e}")
-                if self.config.raise_on_error:
-                    raise SanitizationError(
-                        f"ToxicSanitizer failed: {str(e)}",
-                        sanitizer_name=self.sanitizer_name,
-                    ) from e
+                        for match in matches:
+                            if match and match in current_text:
+                                match_occurrences = current_text.count(match)
+                                if match_occurrences > 0:
+                                    current_text = current_text.replace(match, replacement_token)
+                                    finding_count += match_occurrences
+
+                        if finding_count > 0:
+                            total_replacements += finding_count
+                            issue_msg = "Detected toxic content pattern"
+                            if issue_msg not in detected_issues:
+                                detected_issues.append(issue_msg)
+                            changes.append(
+                                {
+                                    "type": "toxic_pattern",
+                                    "count": finding_count,
+                                    "replacement": replacement_token,
+                                }
+                            )
+                        else:
+                            issue_msg = "Detected toxic content pattern"
+                            if issue_msg not in detected_issues:
+                                detected_issues.append(issue_msg)
+
+                except Exception as e:
+                    logger.error(f"Error in ToxicSanitizer execution: {e}")
+                    if self.config.raise_on_error:
+                        raise SanitizationError(
+                            f"ToxicSanitizer failed: {str(e)}",
+                            sanitizer_name=self.sanitizer_name,
+                        ) from e
 
             is_modified = total_replacements > 0 or len(detected_issues) > 0
 
-            # If toxic content was detected but not fully replaced by regex, apply replacement token
             if is_modified and current_text == output:
                 current_text = replacement_token
                 changes.append(

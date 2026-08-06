@@ -11,7 +11,7 @@ from typing import Sequence
 from output_guard.config import DEFAULT_OUTPUT_GUARD_CONFIG, OutputGuardConfig
 from output_guard.enums import OutputAction
 from output_guard.exceptions import InvalidOutputError, OutputGuardError
-from output_guard.models import OutputSanitizationResult, SanitizationResult
+from output_guard.models import OutputFinding, OutputSanitizationResult, SanitizationResult
 from output_guard.sanitizers.base_sanitizer import BaseSanitizer
 from output_guard.sanitizers.pii_sanitizer import PiiSanitizer
 from output_guard.sanitizers.pipeline import SanitizationPipeline
@@ -34,8 +34,12 @@ class OutputSanitizer:
         self.config = config or DEFAULT_OUTPUT_GUARD_CONFIG
         self.pipeline = SanitizationPipeline(self.config, sanitizers=custom_sanitizers)
 
-    def sanitize(self, output: str | None) -> OutputSanitizationResult:
+    def sanitize(
+        self,
+        output: str | None,
+        findings: Sequence[OutputFinding] | None = None,
+    ) -> OutputSanitizationResult:
         """
         Delegates sanitization execution to SanitizationPipeline.
         """
-        return self.pipeline.run(output)
+        return self.pipeline.run(output, findings=findings)
