@@ -24,6 +24,7 @@ class PromptHardener:
     Main Prompt Hardener facade for AI-SecOps Framework v1.0.
 
     Responsibilities:
+    
     - Receive Draft Prompt, RiskContext, and PolicyDecision.
     - Select appropriate defensive constraints via RuleEngine.
     - Inject security instructions via Injectors pipeline.
