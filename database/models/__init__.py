@@ -1,5 +1,5 @@
 """
-Database Entities re-export for backwards compatibility.
+Database Models package init.
 """
 
 from database.models.audit_event import (
@@ -8,6 +8,7 @@ from database.models.audit_event import (
     EventAction,
     EventSeverity,
     EventStatus,
+    sanitize_payload,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "EventSeverity",
     "EventAction",
     "EventStatus",
+    "sanitize_payload",
 ]

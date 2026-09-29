@@ -78,10 +78,12 @@ class AISecOpsPipeline:
         llm_provider: Optional[BaseLLMProvider] = None,
         output_guard: Optional[OutputGuardFacade] = None,
         logger: Optional[PipelineLogger] = None,
+        audit_logger: Optional[AuditLogger] = None,
     ) -> None:
         """Initializes pipeline with injected or default component facades."""
         self._config = config or PipelineConfig()
         self._logger = logger or PipelineLogger()
+        self._audit_logger = audit_logger or NullAuditLogger()
 
         self._input_validator = input_validator or InputValidator(
             config=self._config.input_validator_config
@@ -93,7 +95,7 @@ class AISecOpsPipeline:
         else:
             self._prompt_firewall = PromptFirewall(
                 detectors=[],
-                audit_logger=NullAuditLogger(),
+                audit_logger=self._audit_logger,
                 normalizer=TextNormalizer(),
                 fail_secure=self._config.fail_secure_default,
             )
@@ -167,9 +169,20 @@ class AISecOpsPipeline:
         context = PipelineContext(
             request=pipeline_req, request_id=pipeline_req.request_id
         )
-        self._logger.info("Pipeline execution started.", request_id=context.request_id)
-
         try:
+            self._record_audit(
+                "PIPELINE_EVENT",
+                context.request_id,
+                {
+                    "component": "AISecOpsPipeline",
+                    "message": "Pipeline execution started.",
+                    "action": "EXECUTE",
+                    "status": "SUCCESS",
+                    "user_id": context.request.user_id,
+                    "provider_name": context.request.provider_name,
+                },
+            )
+
             # -----------------------------------------------------------------
             # Stage 1: Input Validation
             # -----------------------------------------------------------------
@@ -238,6 +251,27 @@ class AISecOpsPipeline:
             )
             return self._handle_fail_secure(context, exc, stage="UncaughtBoundary")
 
+    def _record_audit(
+        self, event_type: str, request_id: str, details: Dict[str, Any]
+    ) -> None:
+        """Safely dispatches audit event to configured audit_logger."""
+        if not getattr(self._config, "enable_audit_logging", True):
+            return
+        try:
+            self._audit_logger.log_event(event_type, request_id, details)
+        except Exception as exc:
+            self._logger.error(
+                f"Audit logging failure for event '{event_type}': {exc}",
+                request_id=request_id,
+            )
+            if (
+                getattr(self._config, "fail_secure_on_db_error", False)
+                and event_type != "FAIL_SECURE"
+            ):
+                raise FailSecurePipelineError(
+                    f"Audit logging failed: {exc}", original_exception=exc, stage="AuditLogging"
+                ) from exc
+
     # =========================================================================
     # Internal Stage Handlers
     # =========================================================================
@@ -264,6 +298,18 @@ class AISecOpsPipeline:
                 err_msgs = [r.error_message for r in val_resp.results if not r.is_valid and r.error_message]
                 context.block_reason = "; ".join(err_msgs) or "Input validation checks failed."
                 self._logger.log_stage_block(stage, context.request_id, context.block_reason)
+
+            self._record_audit(
+                "INPUT_VALIDATION",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": context.block_reason or "Input validation passed.",
+                    "action": "BLOCK" if context.is_blocked else "ALLOW",
+                    "status": "BLOCKED" if context.is_blocked else "SUCCESS",
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
+            )
         except Exception as exc:
             if self._config.fail_secure_default:
                 raise FailSecurePipelineError(
@@ -284,6 +330,17 @@ class AISecOpsPipeline:
             context.record_stage_timing(stage, (time.perf_counter() - t0) * 1000.0)
             self._logger.log_stage_complete(
                 stage, context.request_id, context.stage_timings_ms[stage]
+            )
+            self._record_audit(
+                "PIPELINE_EVENT",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": "Prompt building completed.",
+                    "action": "ALLOW",
+                    "status": "SUCCESS",
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
             )
         except Exception as exc:
             if self._config.fail_secure_default:
@@ -306,6 +363,17 @@ class AISecOpsPipeline:
             context.record_stage_timing(stage, (time.perf_counter() - t0) * 1000.0)
             self._logger.log_stage_complete(
                 stage, context.request_id, context.stage_timings_ms[stage]
+            )
+            self._record_audit(
+                "PROMPT_FIREWALL",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": context.block_reason or "Prompt firewall verification completed.",
+                    "action": "BLOCK" if context.is_blocked else "ALLOW",
+                    "status": "BLOCKED" if context.is_blocked else "SUCCESS",
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
             )
         except Exception as exc:
             if self._config.fail_secure_default:
@@ -364,6 +432,19 @@ class AISecOpsPipeline:
             self._logger.log_stage_complete(
                 stage, context.request_id, context.stage_timings_ms[stage]
             )
+            self._record_audit(
+                "RISK_ASSESSMENT",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": f"Risk assessment completed. Score: {getattr(risk_assessment, 'composite_score', 0.0)}",
+                    "action": "ALLOW",
+                    "status": "SUCCESS",
+                    "composite_score": getattr(risk_assessment, "composite_score", 0.0),
+                    "risk_level": str(getattr(risk_assessment, "risk_level", "LOW")),
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
+            )
         except Exception as exc:
             if self._config.fail_secure_default:
                 raise FailSecurePipelineError(
@@ -409,6 +490,18 @@ class AISecOpsPipeline:
                 context.add_warning(
                     f"PolicyEngine WARN: {getattr(policy_decision, 'reason', 'Policy warning triggered.')}"
                 )
+
+            self._record_audit(
+                "POLICY_DECISION",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": context.block_reason or f"Policy evaluation completed ({action_str}).",
+                    "action": "BLOCK" if context.is_blocked else "ALLOW",
+                    "status": "BLOCKED" if context.is_blocked else "SUCCESS",
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
+            )
         except Exception as exc:
             if self._config.fail_secure_default:
                 raise FailSecurePipelineError(
@@ -437,6 +530,17 @@ class AISecOpsPipeline:
             self._logger.log_stage_complete(
                 stage, context.request_id, context.stage_timings_ms[stage]
             )
+            self._record_audit(
+                "PROMPT_HARDENING",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": "Prompt hardening completed.",
+                    "action": "HARDEN" if context.hardened_prompt != context.draft_prompt else "ALLOW",
+                    "status": "SUCCESS",
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
+            )
         except Exception as exc:
             if self._config.fail_secure_default:
                 raise FailSecurePipelineError(
@@ -456,6 +560,18 @@ class AISecOpsPipeline:
             context.record_stage_timing(stage, (time.perf_counter() - t0) * 1000.0)
             self._logger.log_stage_complete(
                 stage, context.request_id, context.stage_timings_ms[stage]
+            )
+            self._record_audit(
+                "LLM_RESPONSE",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": "LLM response generation completed.",
+                    "action": "EXECUTE",
+                    "status": "SUCCESS",
+                    "provider_name": context.request.provider_name,
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
             )
         except Exception as exc:
             if self._config.fail_secure_default:
@@ -492,6 +608,18 @@ class AISecOpsPipeline:
                     getattr(og_result, "sanitized_output", None)
                     or context.raw_llm_output
                 )
+
+            self._record_audit(
+                "OUTPUT_GUARD",
+                context.request_id,
+                {
+                    "component": stage,
+                    "message": context.block_reason or "Output guard verification passed.",
+                    "action": "BLOCK" if context.is_blocked else ("SANITIZE" if getattr(og_result, "applied_sanitizers", []) else "ALLOW"),
+                    "status": "BLOCKED" if context.is_blocked else "SUCCESS",
+                    "elapsed_ms": context.stage_timings_ms.get(stage, 0.0),
+                },
+            )
         except Exception as exc:
             if self._config.fail_secure_default:
                 raise FailSecurePipelineError(
@@ -523,6 +651,19 @@ class AISecOpsPipeline:
             request_id=context.request_id,
         )
 
+        self._record_audit(
+            "PIPELINE_EVENT",
+            context.request_id,
+            {
+                "component": "AISecOpsPipeline",
+                "message": f"Pipeline early exit blocked by {context.blocked_by}: {context.block_reason}",
+                "action": "BLOCK",
+                "status": "BLOCKED",
+                "blocked_by": context.blocked_by,
+                "block_reason": context.block_reason,
+            },
+        )
+
         return PipelineResponse(
             request_id=context.request_id,
             status=PipelineStatus.BLOCKED,
@@ -549,6 +690,20 @@ class AISecOpsPipeline:
         self._logger.error(
             f"Fail-Secure boundary invoked at stage '{stage}'. Execution halted safely.",
             request_id=context.request_id,
+        )
+
+        self._record_audit(
+            "FAIL_SECURE",
+            context.request_id,
+            {
+                "component": stage,
+                "message": f"Fail-secure boundary invoked at stage '{stage}': {error}",
+                "action": "FAIL_SECURE",
+                "status": "FAIL_SECURE",
+                "severity": "CRITICAL",
+                "failed_stage": stage,
+                "error": str(error),
+            },
         )
 
         return PipelineResponse(
@@ -596,6 +751,19 @@ class AISecOpsPipeline:
         self._logger.info(
             f"Pipeline completed successfully in {total_time:.2f} ms.",
             request_id=context.request_id,
+        )
+
+        self._record_audit(
+            "PIPELINE_EVENT",
+            context.request_id,
+            {
+                "component": "AISecOpsPipeline",
+                "message": f"Pipeline execution completed successfully in {total_time:.2f} ms.",
+                "action": "ALLOW",
+                "status": "SUCCESS",
+                "total_execution_time_ms": total_time,
+                "risk_score": risk_score,
+            },
         )
 
         return PipelineResponse(

@@ -34,6 +34,8 @@ class PipelineConfig:
     fail_secure_default: bool = True
     strict_policy_enforcement: bool = True
     default_provider_name: str = "groq"
+    enable_audit_logging: bool = True
+    fail_secure_on_db_error: bool = False
 
     input_validator_config: InputValidatorConfig = field(
         default_factory=InputValidatorConfig
