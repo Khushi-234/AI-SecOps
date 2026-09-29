@@ -11,5 +11,6 @@ def normalize_threat_name(threat: str) -> str:
     """
     Normalizes a threat name string to lowercase stripped format.
     """
-    return str(threat).lower().strip()
+    return threat.lower().strip()
+
 

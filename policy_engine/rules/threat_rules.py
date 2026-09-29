@@ -21,7 +21,7 @@ class ThreatRule(BasePolicyRule):
     def __init__(self, critical_threats: Sequence[str] | None = None) -> None:
         """Initializes ThreatRule with configurable critical threats sequence."""
         if critical_threats is not None:
-            self._critical_threats = set(str(t).lower().strip() for t in critical_threats)
+            self._critical_threats = set(t.lower().strip() for t in critical_threats)
         else:
             self._critical_threats = set(DEFAULT_CRITICAL_THREATS)
 
@@ -39,7 +39,8 @@ class ThreatRule(BasePolicyRule):
 
         for t in context.detected_threats:
             if t:
-                detected.add(str(t).lower().strip())
+                detected.add(t.lower().strip())
+
 
         if context.evidence:
             for item in context.evidence:

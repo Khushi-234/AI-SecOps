@@ -1,6 +1,6 @@
 from __future__ import annotations
 import math
-from typing import Iterable
+from typing import Any, Iterable
 
 from risk_engine.base_scorer import BaseScorer
 from risk_engine.models import RiskEvidence
@@ -48,7 +48,7 @@ class WeightedScorer(BaseScorer):
     - Validates via base class
     """
 
-    def _score(self, evidence: Iterable[RiskEvidence]) -> float:
+    def _score(self, evidence: list[RiskEvidence], **kwargs: Any) -> float:
         """
         Computes weighted composite risk score from validated evidence.
 

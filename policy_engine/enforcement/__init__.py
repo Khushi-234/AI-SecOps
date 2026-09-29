@@ -43,7 +43,7 @@ class EnforcementLayer:
         action = (
             decision.action
             if isinstance(decision.action, PolicyAction)
-            else PolicyAction.from_string(str(decision.action))
+            else PolicyAction.from_string(decision.action)
         )
 
         if action == PolicyAction.BLOCK:

@@ -20,7 +20,7 @@ class SeverityRule(BasePolicyRule):
         return "SEVERITY_LEVEL_RULE"
 
     def evaluate(self, context: RiskContext) -> PolicyDecision | None:
-        risk_lvl = str(context.risk_level).upper()
+        risk_lvl = context.risk_level.upper()
 
         if risk_lvl == "CRITICAL":
             return PolicyDecision(

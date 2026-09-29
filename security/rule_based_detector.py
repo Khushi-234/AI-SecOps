@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 import time
 from typing import Any
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from security.base_detector import BaseDetector, DetectorConfig
 from security.enums import DetectionStatus, SeverityLevel, ThreatType

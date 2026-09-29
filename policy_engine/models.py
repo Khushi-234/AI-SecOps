@@ -62,7 +62,7 @@ class PolicyDecision:
             object.__setattr__(self, "matched_rules", tuple(self.matched_rules))
 
         # Enforce is_approved consistency based on action
-        action_val = self.action.value if isinstance(self.action, Enum) else str(self.action)
+        action_val = self.action.value if isinstance(self.action, Enum) else self.action
         if action_val == PolicyAction.BLOCK.value:
             object.__setattr__(self, "is_approved", False)
 
@@ -71,7 +71,7 @@ class PolicyDecision:
         return {
             "request_id": self.request_id,
             "action": (
-                self.action.value if isinstance(self.action, Enum) else str(self.action)
+                self.action.value if isinstance(self.action, Enum) else self.action
             ),
             "reason": self.reason,
             "risk_score": self.risk_score,
