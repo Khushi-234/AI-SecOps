@@ -31,6 +31,7 @@ from pipeline import (
     PipelineStatus,
 )
 from security.audit_logger import AuditLogger
+from security.base_detector import BaseDetector
 from security.detectors import (
     DelimiterEscapeDetector,
     EncodingDetector,
@@ -58,7 +59,7 @@ def build_framework_pipeline() -> AISecOpsPipeline:
     normalizer = TextNormalizer()
     audit_logger = FrameworkAuditLogger()
 
-    detectors = [
+    detectors: list[BaseDetector] = [
         PromptInjectionDetector(),
         JailbreakDetector(),
         UnicodeDetector(),
