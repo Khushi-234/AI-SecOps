@@ -137,16 +137,16 @@ class AuditEvent:
 
         # Normalize enums to string representation
         evt_type_val = (
-            self.event_type.value if isinstance(self.event_type, Enum) else str(self.event_type)
+            self.event_type.value if isinstance(self.event_type, Enum) else self.event_type
         )
         sev_val = (
-            self.severity.value if isinstance(self.severity, Enum) else str(self.severity)
+            self.severity.value if isinstance(self.severity, Enum) else self.severity
         )
         act_val = (
-            self.action.value if isinstance(self.action, Enum) else str(self.action)
+            self.action.value if isinstance(self.action, Enum) else self.action
         )
         stat_val = (
-            self.status.value if isinstance(self.status, Enum) else str(self.status)
+            self.status.value if isinstance(self.status, Enum) else self.status
         )
 
         object.__setattr__(self, "event_type", evt_type_val.upper())
