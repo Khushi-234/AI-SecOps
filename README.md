@@ -235,6 +235,5 @@ Run PostgreSQL database migrations:
 
 ## 📄 License & Authors
 
-Author: Juhi Gajjar (M.Tech in AI and DS-Cyber Security)  
-License: MIT License
-
+- **Author**: Juhi Gajjar (M.Tech in AI and DS-Cyber Security)
+- **License**: MIT License
