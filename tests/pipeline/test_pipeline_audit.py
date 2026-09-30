@@ -8,6 +8,8 @@ import pytest
 from database.audit.audit_logger import DatabaseAuditLogger
 from database.exceptions import RepositoryError
 from database.models.audit_event import AuditEvent
+from main import build_framework_pipeline
+from pipeline.builder import AISecOpsPipelineBuilder
 from pipeline.config import PipelineConfig
 from pipeline.exceptions import FailSecurePipelineError
 from pipeline.pipeline import AISecOpsPipeline
@@ -114,3 +116,40 @@ def test_pipeline_db_failure_triggers_fail_secure_when_configured():
     assert resp.status == PipelineStatus.FAIL_SECURE_BLOCKED
     assert resp.blocked is True
     assert resp.success is False
+
+
+def test_builder_with_audit_logger_wiring():
+    mock_logger = MagicMock()
+    builder = AISecOpsPipelineBuilder().with_audit_logger(mock_logger)
+    pipeline = builder.build()
+
+    assert pipeline._audit_logger == mock_logger
+
+
+def test_main_build_framework_pipeline_wiring():
+    pipeline = build_framework_pipeline()
+    assert isinstance(pipeline._audit_logger, DatabaseAuditLogger)
+
+
+def test_multiple_requests_unique_ids_persisted():
+    mock_repo = MagicMock()
+    mock_repo.save.side_effect = lambda evt: evt
+
+    audit_logger = DatabaseAuditLogger(repository=mock_repo)
+    pipeline = AISecOpsPipeline(audit_logger=audit_logger)
+
+    req1 = PipelineRequest(user_prompt="First distinct request prompt")
+    req2 = PipelineRequest(user_prompt="Second distinct request prompt")
+
+    resp1 = pipeline.execute(req1)
+    resp2 = pipeline.execute(req2)
+
+    assert resp1.request_id != resp2.request_id
+
+    saved_events = [call[0][0] for call in mock_repo.save.call_args_list]
+    req1_events = [e for e in saved_events if e.request_id == resp1.request_id]
+    req2_events = [e for e in saved_events if e.request_id == resp2.request_id]
+
+    assert len(req1_events) > 0
+    assert len(req2_events) > 0
+    assert req1_events[0].request_id != req2_events[0].request_id

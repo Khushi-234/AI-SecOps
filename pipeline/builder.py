@@ -16,6 +16,7 @@ from pipeline.pipeline import AISecOpsPipeline
 from policy_engine.engine import PolicyEngine
 from prompt_hardener.hardener import PromptHardener
 from risk_engine.engine import RiskEngine
+from security.audit_logger import AuditLogger
 from security.prompt_firewall import PromptFirewall
 
 
@@ -35,6 +36,7 @@ class AISecOpsPipelineBuilder:
         self._llm_provider: Optional[BaseLLMProvider] = None
         self._output_guard: Optional[OutputGuardFacade] = None
         self._logger: Optional[PipelineLogger] = None
+        self._audit_logger: Optional[AuditLogger] = None
 
     def with_config(self, config: PipelineConfig) -> AISecOpsPipelineBuilder:
         """Sets custom PipelineConfig."""
@@ -98,6 +100,11 @@ class AISecOpsPipelineBuilder:
         self._logger = logger
         return self
 
+    def with_audit_logger(self, audit_logger: AuditLogger) -> AISecOpsPipelineBuilder:
+        """Injects custom AuditLogger instance."""
+        self._audit_logger = audit_logger
+        return self
+
     def build(self) -> AISecOpsPipeline:
         """Constructs and returns configured AISecOpsPipeline instance."""
         return AISecOpsPipeline(
@@ -111,4 +118,5 @@ class AISecOpsPipelineBuilder:
             llm_provider=self._llm_provider,
             output_guard=self._output_guard,
             logger=self._logger,
+            audit_logger=self._audit_logger,
         )

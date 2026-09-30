@@ -41,23 +41,19 @@ from security.detectors import (
     ToolAbuseDetector,
     UnicodeDetector,
 )
+from database import AuditRepository, DatabaseAuditLogger, PostgresConnectionManager
 from security.normalizer import TextNormalizer
 from security.prompt_firewall import PromptFirewall
 
-
-class FrameworkAuditLogger(AuditLogger):
-    """Silent audit logger for PromptFirewall events in interactive CLI mode."""
-
-    def log_event(
-        self, event_type: str, request_id: str, details: dict[str, Any]
-    ) -> None:
-        pass
-
-
 def build_framework_pipeline() -> AISecOpsPipeline:
-    """Builds and wires the AISecOpsPipeline with all 7 security detectors."""
+    """Builds and wires the AISecOpsPipeline with all 7 security detectors and PostgreSQL audit logger."""
     normalizer = TextNormalizer()
-    audit_logger = FrameworkAuditLogger()
+
+    # Initialize PostgreSQL Audit Infrastructure
+    db = PostgresConnectionManager()
+    db.initialize()
+    repository = AuditRepository(db)
+    audit_logger = DatabaseAuditLogger(repository=repository)
 
     detectors: list[BaseDetector] = [
         PromptInjectionDetector(),
@@ -79,6 +75,7 @@ def build_framework_pipeline() -> AISecOpsPipeline:
     return (
         AISecOpsPipelineBuilder()
         .with_prompt_firewall(firewall)
+        .with_audit_logger(audit_logger)
         .build()
     )
 
