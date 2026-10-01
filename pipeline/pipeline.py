@@ -15,7 +15,7 @@ Coordinates all 8 frozen modules in a strict fail-secure sequence:
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from input_validator.input_validator import InputValidator
 from llm.base_provider import BaseLLMProvider
@@ -145,14 +145,33 @@ class AISecOpsPipeline:
         """Exposes read-only pipeline configuration."""
         return self._config
 
+    def _notify_stage(
+        self,
+        callback: Optional[Callable[[str, str, Dict[str, Any]], None]],
+        stage: str,
+        status: str,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Safely invokes progress notification callback for UI observability."""
+        if callback:
+            try:
+                callback(stage, status, details or {})
+            except Exception as exc:
+                self._logger.warning(
+                    f"Stage notification callback failed for stage '{stage}': {exc}"
+                )
+
     def execute(
-        self, request: Union[PipelineRequest, str]
+        self,
+        request: Union[PipelineRequest, str],
+        stage_callback: Optional[Callable[[str, str, Dict[str, Any]], None]] = None,
     ) -> PipelineResponse:
         """
         Executes the end-to-end AI-SecOps security pipeline.
 
         Args:
             request: PipelineRequest object or prompt string.
+            stage_callback: Optional status observer callback (stage_name, status, details).
 
         Returns:
             PipelineResponse containing sanitized completion or block details.
@@ -186,50 +205,150 @@ class AISecOpsPipeline:
             # -----------------------------------------------------------------
             # Stage 1: Input Validation
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "InputValidator", "PROCESSING")
             self._execute_input_validation(context)
             if context.is_blocked:
+                self._notify_stage(
+                    stage_callback,
+                    "InputValidator",
+                    "BLOCKED",
+                    {
+                        "reason": context.block_reason,
+                        "elapsed_ms": context.stage_timings_ms.get("InputValidator", 0.0),
+                    },
+                )
                 return self._handle_early_exit(context)
+            self._notify_stage(
+                stage_callback,
+                "InputValidator",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("InputValidator", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 2: Prompt Building
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "PromptBuilder", "PROCESSING")
             self._execute_prompt_builder(context)
+            self._notify_stage(
+                stage_callback,
+                "PromptBuilder",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("PromptBuilder", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 3: Prompt Firewall Verification
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "PromptFirewall", "PROCESSING")
             self._execute_prompt_firewall(context)
             if context.is_blocked:
+                self._notify_stage(
+                    stage_callback,
+                    "PromptFirewall",
+                    "BLOCKED",
+                    {
+                        "reason": context.block_reason,
+                        "elapsed_ms": context.stage_timings_ms.get("PromptFirewall", 0.0),
+                    },
+                )
                 return self._handle_early_exit(context)
+            self._notify_stage(
+                stage_callback,
+                "PromptFirewall",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("PromptFirewall", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 4: Risk Engine Evaluation
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "RiskEngine", "PROCESSING")
             self._execute_risk_engine(context)
+            risk_score = (
+                getattr(context.risk_assessment, "composite_score", 0.0)
+                if context.risk_assessment
+                else 0.0
+            )
+            self._notify_stage(
+                stage_callback,
+                "RiskEngine",
+                "COMPLETED",
+                {
+                    "elapsed_ms": context.stage_timings_ms.get("RiskEngine", 0.0),
+                    "risk_score": risk_score,
+                },
+            )
 
             # -----------------------------------------------------------------
             # Stage 5: Policy Engine Enforcement
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "PolicyEngine", "PROCESSING")
             self._execute_policy_engine(context)
             if context.is_blocked:
+                self._notify_stage(
+                    stage_callback,
+                    "PolicyEngine",
+                    "BLOCKED",
+                    {
+                        "reason": context.block_reason,
+                        "elapsed_ms": context.stage_timings_ms.get("PolicyEngine", 0.0),
+                    },
+                )
                 return self._handle_early_exit(context)
+            self._notify_stage(
+                stage_callback,
+                "PolicyEngine",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("PolicyEngine", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 6: Prompt Hardener
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "PromptHardener", "PROCESSING")
             self._execute_prompt_hardener(context)
+            self._notify_stage(
+                stage_callback,
+                "PromptHardener",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("PromptHardener", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 7: LLM Provider Execution
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "LLMProvider", "PROCESSING")
             self._execute_llm_provider(context)
+            self._notify_stage(
+                stage_callback,
+                "LLMProvider",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("LLMProvider", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 8: Output Guard Verification & Sanitization
             # -----------------------------------------------------------------
+            self._notify_stage(stage_callback, "OutputGuard", "PROCESSING")
             self._execute_output_guard(context)
             if context.is_blocked:
+                self._notify_stage(
+                    stage_callback,
+                    "OutputGuard",
+                    "BLOCKED",
+                    {
+                        "reason": context.block_reason,
+                        "elapsed_ms": context.stage_timings_ms.get("OutputGuard", 0.0),
+                    },
+                )
                 return self._handle_early_exit(context)
+            self._notify_stage(
+                stage_callback,
+                "OutputGuard",
+                "COMPLETED",
+                {"elapsed_ms": context.stage_timings_ms.get("OutputGuard", 0.0)},
+            )
 
             # -----------------------------------------------------------------
             # Stage 9: Final Response Assembly

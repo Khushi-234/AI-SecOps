@@ -124,3 +124,75 @@ def test_repository_save_exception_raises_repository_error():
 
     with pytest.raises(RepositoryError):
         repo.save(evt)
+
+
+def test_repository_get_summary_stats():
+    mock_pool = MagicMock()
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_pool.getconn.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
+
+    mock_cursor.fetchone.return_value = (10, 2, 8, 45, 3)
+
+    mgr = PostgresConnectionManager(connection_pool=mock_pool)
+    repo = AuditRepository(connection_manager=mgr)
+
+    stats = repo.get_summary_stats()
+    assert stats["total_requests"] == 10
+    assert stats["blocked_requests"] == 2
+    assert stats["allowed_requests"] == 8
+    assert stats["total_events"] == 45
+    assert stats["critical_high_events"] == 3
+
+
+def test_repository_get_recent_requests():
+    mock_pool = MagicMock()
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_pool.getconn.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
+
+    now_utc = datetime.now(timezone.utc)
+    mock_cursor.fetchall.return_value = [
+        ("req_100", "trc_100", now_utc, now_utc, "SUCCESS", "INFO", "ALLOW", 5, "InputValidator, PromptFirewall"),
+    ]
+
+    mgr = PostgresConnectionManager(connection_pool=mock_pool)
+    repo = AuditRepository(connection_manager=mgr)
+
+    recent = repo.get_recent_requests(limit=10)
+    assert len(recent) == 1
+    assert recent[0]["request_id"] == "req_100"
+    assert recent[0]["status"] == "SUCCESS"
+    assert recent[0]["event_count"] == 5
+
+
+def test_repository_get_analytics_breakdown():
+    mock_pool = MagicMock()
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_pool.getconn.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
+
+    # Fetch distribution returns list of tuples per call
+    mock_cursor.fetchall.side_effect = [
+        [("SUCCESS", 8), ("BLOCKED", 2)],
+        [("INFO", 20), ("HIGH", 2)],
+        [("InputValidator", 10), ("PromptFirewall", 12)],
+        [("ALLOW", 8), ("BLOCK", 2)],
+        [("INPUT_VALIDATION", 10), ("PROMPT_FIREWALL", 12)],
+    ]
+
+    mgr = PostgresConnectionManager(connection_pool=mock_pool)
+    repo = AuditRepository(connection_manager=mgr)
+
+    analytics = repo.get_analytics_breakdown()
+    assert analytics["status"]["SUCCESS"] == 8
+    assert analytics["status"]["BLOCKED"] == 2
+    assert analytics["severity"]["HIGH"] == 2
+    assert analytics["component"]["InputValidator"] == 10
+

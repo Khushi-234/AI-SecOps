@@ -105,6 +105,8 @@ class PostgresConnectionManager:
         finally:
             if conn and self._pool is not None:
                 try:
+                    if not conn.closed:
+                        conn.commit()
                     self._pool.putconn(conn)
                 except Exception as put_exc:
                     logger.warning(f"Error returning connection to pool: {put_exc}")

@@ -2,9 +2,9 @@
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
-[![Tests](https://img.shields.io/badge/tests-1161%20passed-success.svg)](file:///home/bisag/Downloads/M.Tech_Project_Juhi/Project_AISecOps/ai-secops-framework/tests)
+[![Tests](https://img.shields.io/badge/tests-1168%20passed-success.svg)](file:///home/bisag/Downloads/M.Tech_Project_Juhi/Project_AISecOps/ai-secops-framework/tests)
 [![OWASP LLM](https://img.shields.io/badge/OWASP-LLM%20Top%2010-red.svg)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
-[![Sprint Status](https://img.shields.io/badge/Sprint-12%20Completed-brightgreen.svg)](file:///home/bisag/Downloads/M.Tech_Project_Juhi/Project_AISecOps/ai-secops-framework/docs/sprint12_database_audit_logging.md)
+[![Sprint Status](https://img.shields.io/badge/Sprint-13%20Completed-brightgreen.svg)](file:///home/bisag/Downloads/M.Tech_Project_Juhi/Project_AISecOps/ai-secops-framework/dashboard)
 
 > Enterprise-grade, defense-in-depth security framework for Large Language Model (LLM) applications.
 
