@@ -50,9 +50,10 @@ class DashboardService:
             from security.normalizer import TextNormalizer
             from security.prompt_firewall import PromptFirewall
 
+            from security.base_detector import BaseDetector
             audit_logger = DatabaseAuditLogger(repository=self.repo)
             normalizer = TextNormalizer()
-            detectors = [
+            detectors: list[BaseDetector] = [
                 PromptInjectionDetector(),
                 JailbreakDetector(),
                 UnicodeDetector(),
@@ -105,7 +106,8 @@ class DashboardService:
                     );
                     """
                 )
-                exists = cursor.fetchone()[0]
+                row = cursor.fetchone()
+                exists = row[0] if row else False
                 cursor.close()
                 if not exists:
                     return False, "Table 'audit_events' missing. Please run migrations: python -m database.migrations.migrate"

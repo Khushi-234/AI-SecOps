@@ -69,33 +69,19 @@ def render_request_monitoring_table(requests: List[Dict[str, Any]]) -> Optional[
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("### 🔍 Live Request Activity Monitor")
 
-    df_requests = pd.DataFrame(requests)
-
-    # Format columns for display
-    display_df = df_requests[
-        [
-            "request_id",
-            "timestamp",
-            "status",
-            "severity",
-            "action",
-            "event_count",
-            "components",
-        ]
-    ].copy()
-
-    display_df.rename(
-        columns={
-            "request_id": "Request ID",
-            "timestamp": "Last Event Time",
-            "status": "Status",
-            "severity": "Severity",
-            "action": "Action",
-            "event_count": "Events",
-            "components": "Stages Passed",
-        },
-        inplace=True,
-    )
+    display_records = [
+        {
+            "Request ID": r.get("request_id"),
+            "Last Event Time": r.get("timestamp"),
+            "Status": r.get("status"),
+            "Severity": r.get("severity"),
+            "Action": r.get("action"),
+            "Events": r.get("event_count"),
+            "Stages Passed": r.get("components"),
+        }
+        for r in requests
+    ]
+    display_df = pd.DataFrame(display_records)
 
     st.dataframe(
         display_df,

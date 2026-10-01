@@ -54,11 +54,13 @@ else:
                 );
                 """
             )
-            has_audit_events = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            has_audit_events = row[0] if row else False
 
             if has_audit_events:
                 cursor.execute("SELECT COUNT(*) FROM audit_events;")
-                total_count = cursor.fetchone()[0]
+                cnt_row = cursor.fetchone()
+                total_count = cnt_row[0] if cnt_row else 0
 
                 cursor.execute(
                     "SELECT event_id, request_id, timestamp, component, event_type, severity, action, status, message "
