@@ -78,6 +78,8 @@ class ITSDataLoaderFactory:
             return PEMSAdapter(dataset_name=st.upper(), **kwargs)
         elif st in ("nyc-tlc", "tlc"):
             pq_path = kwargs.get("parquet_path") or cfg.custom_parquet_path
+            if not pq_path:
+                raise ValueError("NYC TLC loader requires 'parquet_path' argument or ITS_PARQUET_PATH env variable.")
             return ParquetTrafficDataLoader(parquet_path=pq_path, name="NYC TLC Trip Dataset", **kwargs)
         else:
             raise ValueError(

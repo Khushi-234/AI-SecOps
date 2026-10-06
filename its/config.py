@@ -13,6 +13,16 @@ from pathlib import Path
 from typing import Optional
 
 
+def _env_path(key: str) -> Optional[Path]:
+    val = os.getenv(key)
+    return Path(val) if val else None
+
+
+def _env_int(key: str) -> Optional[int]:
+    val = os.getenv(key)
+    return int(val) if val else None
+
+
 @dataclass(slots=True)
 class ITSConfig:
     """
@@ -31,39 +41,22 @@ class ITSConfig:
         )
     )
     pems_bay_path: Optional[Path] = field(
-        default_factory=lambda: (
-            Path(os.getenv("ITS_PEMS_BAY_PATH"))
-            if os.getenv("ITS_PEMS_BAY_PATH")
-            else None
-        )
+        default_factory=lambda: _env_path("ITS_PEMS_BAY_PATH")
     )
     metr_la_path: Optional[Path] = field(
-        default_factory=lambda: (
-            Path(os.getenv("ITS_METR_LA_PATH"))
-            if os.getenv("ITS_METR_LA_PATH")
-            else None
-        )
+        default_factory=lambda: _env_path("ITS_METR_LA_PATH")
     )
     custom_csv_path: Optional[Path] = field(
-        default_factory=lambda: (
-            Path(os.getenv("ITS_CSV_PATH")) if os.getenv("ITS_CSV_PATH") else None
-        )
+        default_factory=lambda: _env_path("ITS_CSV_PATH")
     )
     custom_parquet_path: Optional[Path] = field(
-        default_factory=lambda: (
-            Path(os.getenv("ITS_PARQUET_PATH"))
-            if os.getenv("ITS_PARQUET_PATH")
-            else None
-        )
+        default_factory=lambda: _env_path("ITS_PARQUET_PATH")
     )
     strict_validation: bool = field(
         default_factory=lambda: os.getenv("ITS_STRICT_VALIDATION", "true").lower()
         in ("1", "true", "yes")
     )
     max_streaming_records: Optional[int] = field(
-        default_factory=lambda: (
-            int(os.getenv("ITS_MAX_STREAMING_RECORDS"))
-            if os.getenv("ITS_MAX_STREAMING_RECORDS")
-            else None
-        )
+        default_factory=lambda: _env_int("ITS_MAX_STREAMING_RECORDS")
     )
+

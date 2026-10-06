@@ -24,7 +24,7 @@ Architecture Flow:
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from its.models.its_models import ITSContext, Incident, Road, TrafficCondition
 from its.services.incident_service import IncidentService

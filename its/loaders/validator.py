@@ -78,16 +78,16 @@ class StreamingDataValidator:
         errors: List[str] = []
 
         # 1. Identifier checks
-        if not obs.sensor_id or not str(obs.sensor_id).strip():
+        if not obs.sensor_id or not obs.sensor_id.strip():
             errors.append("Missing required sensor_id/road_id.")
         elif obs.sensor_id.upper() in ("UNKNOWN", "NULL", "NONE"):
             errors.append(f"Invalid sensor_id: '{obs.sensor_id}'")
 
         # 2. Timestamp format
-        if not obs.timestamp or not str(obs.timestamp).strip():
+        if not obs.timestamp or not obs.timestamp.strip():
             errors.append("Missing required timestamp.")
         else:
-            ts_str = str(obs.timestamp).strip()
+            ts_str = obs.timestamp.strip()
             if not self._iso_date_regex.match(ts_str):
                 # Try parsing with datetime
                 try:
