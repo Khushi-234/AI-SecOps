@@ -1,0 +1,67 @@
+{
+  "_metadata": {
+    "source": "SIMULATED ITS TELEMETRY",
+    "description": "Simulated real-time traffic condition data for academic research on Secure LLM-Based Intelligent Transportation Management System",
+    "disclaimer": "This data is NOT sourced from real-time government traffic systems, CCTV feeds, or physical IoT sensors.",
+    "version": "1.0.0",
+    "generated_for": "M.Tech Project — AI-SecOps Framework with ITS Domain Application"
+  },
+  "traffic": [
+    {
+      "road_id": "RD-001",
+      "vehicle_count": 145,
+      "average_speed": 18,
+      "congestion_level": "HIGH",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-002",
+      "vehicle_count": 210,
+      "average_speed": 12,
+      "congestion_level": "CRITICAL",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-003",
+      "vehicle_count": 78,
+      "average_speed": 52,
+      "congestion_level": "LOW",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-004",
+      "vehicle_count": 112,
+      "average_speed": 22,
+      "congestion_level": "HIGH",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-005",
+      "vehicle_count": 65,
+      "average_speed": 38,
+      "congestion_level": "MEDIUM",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-006",
+      "vehicle_count": 89,
+      "average_speed": 30,
+      "congestion_level": "MEDIUM",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-007",
+      "vehicle_count": 42,
+      "average_speed": 35,
+      "congestion_level": "LOW",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    },
+    {
+      "road_id": "RD-008",
+      "vehicle_count": 55,
+      "average_speed": 85,
+      "congestion_level": "LOW",
+      "timestamp": "2026-10-05T09:15:00+05:30"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "_metadata": {
+    "source": "SIMULATED ITS TELEMETRY",
+    "description": "Simulated incident/event data for academic research on Secure LLM-Based Intelligent Transportation Management System",
+    "disclaimer": "This data is NOT sourced from real emergency response systems, government incident databases, or live traffic monitoring.",
+    "version": "1.0.0",
+    "generated_for": "M.Tech Project — AI-SecOps Framework with ITS Domain Application"
+  },
+  "incidents": [
+    {
+      "incident_id": "INC-001",
+      "road_id": "RD-001",
+      "incident_type": "ACCIDENT",
+      "location": "Near Thaltej Crossroads, SG Highway",
+      "severity": "HIGH",
+      "description": "Multi-vehicle collision reported near Thaltej Crossroads. Two lanes blocked. Emergency services dispatched.",
+      "status": "ACTIVE",
+      "timestamp": "2026-10-05T08:45:00+05:30"
+    },
+    {
+      "incident_id": "INC-002",
+      "road_id": "RD-002",
+      "incident_type": "ROAD_BLOCK",
+      "location": "Near Nehru Nagar Circle, Ring Road",
+      "severity": "CRITICAL",
+      "description": "Complete road blockage due to waterlogging. All lanes affected. Traffic diverted via alternate routes.",
+      "status": "ACTIVE",
+      "timestamp": "2026-10-05T07:30:00+05:30"
+    },
+    {
+      "incident_id": "INC-003",
+      "road_id": "RD-004",
+      "incident_type": "CONSTRUCTION",
+      "location": "Near Kalupur Railway Station, Main Road",
+      "severity": "MEDIUM",
+      "description": "Scheduled road widening construction. One lane closed. Expected completion in 15 days.",
+      "status": "ACTIVE",
+      "timestamp": "2026-10-05T06:00:00+05:30"
+    },
+    {
+      "incident_id": "INC-004",
+      "road_id": "RD-005",
+      "incident_type": "VEHICLE_BREAKDOWN",
+      "location": "Near Gujarat University Gate, University Road",
+      "severity": "LOW",
+      "description": "Stalled commercial vehicle on left shoulder. Towing assistance enroute. Minor lane obstruction.",
+      "status": "ACTIVE",
+      "timestamp": "2026-10-05T09:05:00+05:30"
+    },
+    {
+      "incident_id": "INC-005",
+      "road_id": "RD-006",
+      "incident_type": "TRAFFIC_JAM",
+      "location": "Usmanpura Junction, Ashram Road",
+      "severity": "MEDIUM",
+      "description": "Heavy congestion due to signal malfunction at Usmanpura Junction. Traffic police deployed.",
+      "status": "ACTIVE",
+      "timestamp": "2026-10-05T08:55:00+05:30"
+    },
+    {
+      "incident_id": "INC-006",
+      "road_id": "RD-003",
+      "incident_type": "ACCIDENT",
+      "location": "Near Airport Circle, Airport Road",
+      "severity": "LOW",
+      "description": "Minor fender-bender between two vehicles. Vehicles moved to shoulder. No injuries reported.",
+      "status": "RESOLVED",
+      "timestamp": "2026-10-05T07:15:00+05:30"
+    },
+    {
+      "incident_id": "INC-007",
+      "road_id": "RD-008",
+      "incident_type": "CONSTRUCTION",
+      "location": "Near Koba Circle, Gandhinagar Highway",
+      "severity": "LOW",
+      "description": "Routine median repair work. Right shoulder closed. Minimal impact on traffic flow.",
+      "status": "RESOLVED",
+      "timestamp": "2026-10-04T22:00:00+05:30"
+    }
+  ]
+}

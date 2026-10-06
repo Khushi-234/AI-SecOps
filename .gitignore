@@ -30,3 +30,15 @@ logs/
 
 chroma_data/
 reports/
+
+# Large Datasets (V2 ITS Domain)
+datasets/
+data/large/
+*.h5
+*.hdf5
+*.parquet
+*.pq
+*.tar.gz
+*.zip
+*.npy
+*.npz

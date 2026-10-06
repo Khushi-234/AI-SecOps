@@ -1,0 +1,115 @@
+{
+  "_metadata": {
+    "source": "SIMULATED ITS TELEMETRY",
+    "description": "Fictional road network data for academic research on Secure LLM-Based Intelligent Transportation Management System",
+    "disclaimer": "This data is NOT sourced from real-time government traffic systems, restricted databases, or physical IoT devices.",
+    "version": "1.0.0",
+    "generated_for": "M.Tech Project — AI-SecOps Framework with ITS Domain Application"
+  },
+  "roads": [
+    {
+      "road_id": "RD-001",
+      "road_name": "SG Highway",
+      "start_location": "Thaltej",
+      "end_location": "Sarkhej",
+      "latitude": 23.0225,
+      "longitude": 72.5296,
+      "speed_limit": 80,
+      "lanes": 6,
+      "length_km": 14.5,
+      "road_type": "HIGHWAY",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-002",
+      "road_name": "Ring Road",
+      "start_location": "Nehru Nagar Circle",
+      "end_location": "Ranip",
+      "latitude": 23.0396,
+      "longitude": 72.5463,
+      "speed_limit": 60,
+      "lanes": 4,
+      "length_km": 22.0,
+      "road_type": "ARTERIAL",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-003",
+      "road_name": "Airport Road",
+      "start_location": "Hansol",
+      "end_location": "Sardar Vallabhbhai Patel International Airport",
+      "latitude": 23.0734,
+      "longitude": 72.6345,
+      "speed_limit": 70,
+      "lanes": 4,
+      "length_km": 8.2,
+      "road_type": "ARTERIAL",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-004",
+      "road_name": "Main Road",
+      "start_location": "Lal Darwaza",
+      "end_location": "Kalupur",
+      "latitude": 23.0258,
+      "longitude": 72.5873,
+      "speed_limit": 40,
+      "lanes": 2,
+      "length_km": 4.1,
+      "road_type": "URBAN",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-005",
+      "road_name": "University Road",
+      "start_location": "Gujarat University",
+      "end_location": "Vijay Crossroads",
+      "latitude": 23.0346,
+      "longitude": 72.5432,
+      "speed_limit": 50,
+      "lanes": 4,
+      "length_km": 5.6,
+      "road_type": "URBAN",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-006",
+      "road_name": "Ashram Road",
+      "start_location": "Revenue Taluka",
+      "end_location": "Usmanpura",
+      "latitude": 23.0317,
+      "longitude": 72.5617,
+      "speed_limit": 50,
+      "lanes": 4,
+      "length_km": 6.3,
+      "road_type": "ARTERIAL",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-007",
+      "road_name": "CG Road",
+      "start_location": "Swastik Crossroads",
+      "end_location": "Stadium Crossroads",
+      "latitude": 23.0279,
+      "longitude": 72.5614,
+      "speed_limit": 40,
+      "lanes": 4,
+      "length_km": 3.2,
+      "road_type": "URBAN",
+      "status": "ACTIVE"
+    },
+    {
+      "road_id": "RD-008",
+      "road_name": "Gandhinagar Highway",
+      "start_location": "Koba Circle",
+      "end_location": "Gandhinagar",
+      "latitude": 23.1547,
+      "longitude": 72.6538,
+      "speed_limit": 100,
+      "lanes": 6,
+      "length_km": 28.5,
+      "road_type": "EXPRESSWAY",
+      "status": "ACTIVE"
+    }
+  ]
+}
