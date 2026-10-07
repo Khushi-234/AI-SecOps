@@ -38,6 +38,7 @@ class TransportationThreatCategory(str, Enum):
     SENSOR_SPOOFING = "SENSOR_SPOOFING"
     PRIORITY_ABUSE = "PRIORITY_ABUSE"
     TELEMETRY_INJECTION = "TELEMETRY_INJECTION"
+    EMERGENCY_MANIPULATION = "EMERGENCY_MANIPULATION"
     GPS_SPOOFING = "GPS_SPOOFING"
     V2X_MESSAGE_ABUSE = "V2X_MESSAGE_ABUSE"
 
@@ -50,6 +51,7 @@ class TransportationThreatRule:
     category: TransportationThreatCategory
     pattern: str
     description: str
+    threat_identifier: str = "ITS_THREAT"
     threat_type: ThreatType = ThreatType.TOOL_ABUSE
     severity: SeverityLevel = SeverityLevel.CRITICAL
     confidence: float = 0.98
@@ -57,11 +59,12 @@ class TransportationThreatRule:
 
 # Baseline rule catalog
 DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
-    # 1. Traffic Signal Manipulation
+    # 1. Traffic Signal Manipulation / Override
     TransportationThreatRule(
         rule_id="ITS-SIG-001",
+        threat_identifier="ITS_SIGNAL_OVERRIDE",
         category=TransportationThreatCategory.SIGNAL_MANIPULATION,
-        pattern=r"(?i)\b(?:override|tamper|force|manipulate|hijack|bypass|disable|alter)\b.*?\b(?:traffic\s+signals?|traffic\s+lights?|signals?|signal\s+phasings?|signal\s+timings?|signal\s+controllers?|scats|scoot|nema|intersection\s+signals?)\b",
+        pattern=r"(?i)\b(?:override|tamper|force|manipulate|hijack|bypass|disable|alter|change)\b.*?\b(?:traffic\s+signals?|traffic\s+lights?|signals?|signal\s+phasings?|signal\s+timings?|signal\s+controllers?|scats|scoot|nema|intersection\s+signals?)\b",
         description="Unauthorized traffic-signal manipulation attempt",
         threat_type=ThreatType.TOOL_ABUSE,
         severity=SeverityLevel.CRITICAL,
@@ -69,15 +72,17 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
     ),
     TransportationThreatRule(
         rule_id="ITS-SIG-002",
+        threat_identifier="ITS_SIGNAL_OVERRIDE",
         category=TransportationThreatCategory.SIGNAL_MANIPULATION,
-        pattern=r"(?i)\b(?:set|turn|switch|change)\b.*?\b(?:traffic\s+signals?|traffic\s+lights?|signals?)\b.*?\b(?:green|red|flashing|off|indefinitely|permanent)\b",
-        description="Unauthorized signal state or color modification attempt",
+        pattern=r"(?i)\b(?:set|turn|switch|change|force)\b.*?\b(?:traffic\s+signals?|traffic\s+lights?|signals?|lights?|intersection(?:\s+[a-z0-9_-]+)?)\b.*?\b(?:green|red|flashing|off|indefinitely|permanent)\b",
+        description="Unauthorized signal state, intersection, or color modification attempt",
         threat_type=ThreatType.TOOL_ABUSE,
         severity=SeverityLevel.CRITICAL,
         confidence=0.98,
     ),
     TransportationThreatRule(
         rule_id="ITS-SIG-003",
+        threat_identifier="ITS_SIGNAL_OVERRIDE",
         category=TransportationThreatCategory.SIGNAL_MANIPULATION,
         pattern=r"(?i)\b(?:override|change|force|cut\s+power\s+to)\s+(?:the\s+)?traffic\s+signals?\s+at\s+\w+\b",
         description="Direct traffic signal override instruction",
@@ -86,18 +91,52 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
         confidence=0.99,
     ),
 
-    # 2. Actuation & Infrastructure Tampering
+    # 2. Emergency Manipulation / Bypass
     TransportationThreatRule(
-        rule_id="ITS-ACT-001",
-        category=TransportationThreatCategory.ACTUATOR_TAMPERING,
-        pattern=r"(?i)\b(?:disable|tamper|override|manipulate|bypass)\b.*?\b(?:ramp\s+meters?|variable\s+speed\s+limits?|speed\s+limits?|safety\s+interlocks?|lane\s+controls?|dynamic\s+message\s+signs?|dms|vms|inductive\s+loops?|evp|preemptions?)\b",
-        description="Transportation physical actuator or sensor tampering",
+        rule_id="ITS-EMG-001",
+        threat_identifier="ITS_EMERGENCY_MANIPULATION",
+        category=TransportationThreatCategory.EMERGENCY_MANIPULATION,
+        pattern=r"(?i)\b(?:pretend|claim|fake|simulate|declare)\b.*?\b(?:emergency)\b.*?\b(?:bypass|ignore|override|disable)\b",
+        description="Fictitious emergency claim to bypass transportation safety restrictions",
         threat_type=ThreatType.TOOL_ABUSE,
         severity=SeverityLevel.CRITICAL,
-        confidence=0.97,
+        confidence=0.98,
+    ),
+    TransportationThreatRule(
+        rule_id="ITS-EMG-002",
+        threat_identifier="ITS_EMERGENCY_MANIPULATION",
+        category=TransportationThreatCategory.EMERGENCY_MANIPULATION,
+        pattern=r"(?i)\b(?:emergency\s+override|priority\s+override)\b.*?\b(?:bypass|disable|ignore)\b.*?\b(?:safety|restrictions?|rules?)\b",
+        description="Emergency override abuse to bypass safety restrictions",
+        threat_type=ThreatType.TOOL_ABUSE,
+        severity=SeverityLevel.CRITICAL,
+        confidence=0.98,
+    ),
+
+    # 3. Actuation & Infrastructure Tampering
+    TransportationThreatRule(
+        rule_id="ITS-ACT-001",
+        threat_identifier="ITS_ACTUATION_TAMPERING",
+        category=TransportationThreatCategory.ACTUATOR_TAMPERING,
+        pattern=r"(?i)\b(?:disable|tamper|override|manipulate|bypass|modify)\b.*?\b(?:ramp\s+meters?|variable\s+speed\s+limits?|speed\s+limits?|safety\s+interlocks?|safety\s+controls?|safety\s+restrictions?|safety\s+rules?|lane\s+controls?|dynamic\s+message\s+signs?|dms|vms|inductive\s+loops?|evp|preemptions?|intersection\s+(?:control\s+)?parameters?)\b",
+        description="Transportation physical actuator, safety controls, or parameter tampering",
+        threat_type=ThreatType.TOOL_ABUSE,
+        severity=SeverityLevel.CRITICAL,
+        confidence=0.98,
     ),
     TransportationThreatRule(
         rule_id="ITS-ACT-002",
+        threat_identifier="ITS_ACTUATION_TAMPERING",
+        category=TransportationThreatCategory.ACTUATOR_TAMPERING,
+        pattern=r"(?i)\b(?:modify|alter|tamper\s+with)\b.*?\b(?:intersection\s+(?:control\s+)?parameters?|signal\s+controller\s+configs?)\b",
+        description="Unauthorized intersection parameter modification",
+        threat_type=ThreatType.TOOL_ABUSE,
+        severity=SeverityLevel.CRITICAL,
+        confidence=0.98,
+    ),
+    TransportationThreatRule(
+        rule_id="ITS-ACT-003",
+        threat_identifier="ITS_ACTUATION_TAMPERING",
         category=TransportationThreatCategory.ACTUATOR_TAMPERING,
         pattern=r"(?i)\b(?:modify|increase|set)\b.*?\b(?:variable\s+speed\s+limit|speed\s+limit)\b.*?\b(?:to\s+\d{3}|\b(?:200|250|300)\b|unrestricted)\b",
         description="Dangerous speed limit alteration attempt",
@@ -106,9 +145,10 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
         confidence=0.98,
     ),
 
-    # 3. Emergency Priority Abuse
+    # 4. Emergency Priority Abuse (EVP)
     TransportationThreatRule(
         rule_id="ITS-PRI-001",
+        threat_identifier="ITS_PRIORITY_ABUSE",
         category=TransportationThreatCategory.PRIORITY_ABUSE,
         pattern=r"(?i)\b(?:spoof|fake|counterfeit|clone)\b.*?\b(?:emergency\s+vehicle\s+preemption|evp|transit\s+priority|siren\s+signals?|optical\s+strobe\s+preemption)\b",
         description="Emergency vehicle preemption spoofing attack",
@@ -117,9 +157,10 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
         confidence=0.98,
     ),
 
-    # 4. Malicious Routing & Gridlock Inducement
+    # 5. Malicious Routing & Gridlock Inducement
     TransportationThreatRule(
         rule_id="ITS-ROU-001",
+        threat_identifier="ITS_MALICIOUS_ROUTING",
         category=TransportationThreatCategory.MALICIOUS_ROUTING,
         pattern=r"(?i)\b(?:route|divert|send|direct)\b.*?\b(?:into|towards)\b.*?\b(?:hazards?|floods?|flooded|fires?|collisions?|accidents?|blocked|sinkholes?|closed\s+zones?|bridge\s+collapses?)\b",
         description="Malicious routing into physical hazard or disaster area",
@@ -129,6 +170,7 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
     ),
     TransportationThreatRule(
         rule_id="ITS-ROU-002",
+        threat_identifier="ITS_MALICIOUS_ROUTING",
         category=TransportationThreatCategory.MALICIOUS_ROUTING,
         pattern=r"(?i)\b(?:cause|induce|force|maximize|trigger|orchestrate)\b.*?\b(?:gridlocks?|deadlocks?|stampedes?|mass\s+congestion|corridor\s+blockades?|bottlenecks?)\b",
         description="Intentional transportation gridlock inducement",
@@ -137,27 +179,30 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
         confidence=0.97,
     ),
 
-    # 5. Infrastructure & SCADA Reconnaissance / Exploitation
+    # 6. Infrastructure & SCADA Reconnaissance / Exploitation
     TransportationThreatRule(
         rule_id="ITS-SCA-001",
+        threat_identifier="ITS_SCADA_EXPLOITATION",
         category=TransportationThreatCategory.SCADA_EXPLOITATION,
-        pattern=r"(?i)\b(?:scada|tmc|traffic\s+management\s+center|atms|its\s+controllers?|loop\s+detectors?)\b.*?\b(?:passwords?|credentials?|secrets?|api[_-]?keys?|private[_-]?keys?|firmware\s+exploits?|root\s+access|ssh\s+keys?)\b",
-        description="Transportation SCADA/TMC credential exfiltration attempt",
+        pattern=r"(?i)\b(?:scada|tmc|traffic\s+management\s+center|atms|its\s+controllers?|traffic\s+operators?|traffic\s+control)\b.*?\b(?:passwords?|credentials?|secrets?|api[_-]?keys?|private[_-]?keys?|firmware\s+exploits?|root\s+access|ssh\s+keys?|internal\s+configurations?)\b",
+        description="Transportation SCADA/TMC/Operator credential exfiltration attempt",
         threat_type=ThreatType.SECRET_EXTRACTION,
         severity=SeverityLevel.CRITICAL,
         confidence=0.99,
     ),
     TransportationThreatRule(
         rule_id="ITS-SCA-002",
+        threat_identifier="ITS_SCADA_EXPLOITATION",
         category=TransportationThreatCategory.SCADA_EXPLOITATION,
-        pattern=r"(?i)\b(?:passwords?|credentials?|secrets?|api[_-]?keys?|private[_-]?keys?|encryption\s+keys?)\b.*?\b(?:scada|tmc|traffic\s+management\s+center|its\s+controllers?)\b",
-        description="Transportation SCADA/TMC credential exfiltration attempt",
+        pattern=r"(?i)\b(?:passwords?|credentials?|secrets?|api[_-]?keys?|private[_-]?keys?|encryption\s+keys?)\b.*?\b(?:scada|tmc|traffic\s+management\s+center|traffic\s+operators?|its\s+controllers?|traffic\s+control)\b",
+        description="Transportation SCADA/TMC/Operator credential exfiltration attempt",
         threat_type=ThreatType.SECRET_EXTRACTION,
         severity=SeverityLevel.CRITICAL,
         confidence=0.99,
     ),
     TransportationThreatRule(
         rule_id="ITS-SCA-003",
+        threat_identifier="ITS_SCADA_EXPLOITATION",
         category=TransportationThreatCategory.SCADA_EXPLOITATION,
         pattern=r"(?i)\b(?:emergency\s+dispatch|police\s+convoy|vip\s+routes?|evacuation\s+codes?)\b.*?\b(?:encryption\s+keys?|frequencies?|radio\s+codes?|secrets?)\b",
         description="Sensitive emergency transport communications reconnaissance",
@@ -166,9 +211,10 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
         confidence=0.98,
     ),
 
-    # 6. Sensor Spoofing & Poisoning
+    # 7. Sensor Spoofing & Poisoning
     TransportationThreatRule(
         rule_id="ITS-SPO-001",
+        threat_identifier="ITS_SENSOR_SPOOFING",
         category=TransportationThreatCategory.SENSOR_SPOOFING,
         pattern=r"(?i)\b(?:spoof|poison|inject\s+false|falsify|corrupt)\b.*?\b(?:sensor\s+readings?|loop\s+detector\s+data|speed\s+telemetry|occupancy\s+metrics?|radar\s+readings?)\b",
         description="Traffic telemetry sensor spoofing or poisoning attempt",
@@ -177,9 +223,10 @@ DEFAULT_ITS_RULES: List[TransportationThreatRule] = [
         confidence=0.97,
     ),
 
-    # 7. Telemetry & Context Injections
+    # 8. Telemetry & Context Injections
     TransportationThreatRule(
         rule_id="ITS-INJ-001",
+        threat_identifier="ITS_TELEMETRY_INJECTION",
         category=TransportationThreatCategory.TELEMETRY_INJECTION,
         pattern=r"(?i)(?:ignore\s+all\s+(?:previous\s+)?instructions|override\s+system\s+prompt|disregard\s+security\s+rules|reveal\s+(?:system\s+)?prompt)",
         description="Prompt injection embedded within ITS transportation telemetry",
@@ -286,6 +333,7 @@ class ITSTransportationThreatDetector(BaseDetector):
                     metadata={
                         "domain": "ITS",
                         "rule_id": rule.rule_id,
+                        "threat_identifier": rule.threat_identifier,
                         "category": rule.category.value,
                         "rule_description": rule.description,
                         "matched_span": list(match.span()),

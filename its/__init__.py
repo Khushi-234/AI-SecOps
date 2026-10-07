@@ -21,10 +21,12 @@ Architecture:
 """
 
 from its.application import ITSApplication, build_its_pipeline
+from its.integration import AISecOpsAdapter
 
 __version__ = "2.0.0"
 
 __all__ = [
     "ITSApplication",
     "build_its_pipeline",
+    "AISecOpsAdapter",
 ]
